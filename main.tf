@@ -2,12 +2,13 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "1.38.0"
+      version = "3.59.0"
     }
   }
 }
 
 provider "azurerm" {
+  features{}
 }
 ##RG##
 resource "azurerm_resource_group" "rg" {
@@ -276,7 +277,7 @@ resource "azurerm_private_endpoint" "acr_private_endpoint" {
   }
  
   depends_on = [
-    azurerm_virtual_network.acr_private_endpoint_vnet,
+    azurerm_virtual_network.vnet,
     module.acr,
     azurerm_container_registry.acr
   ]
