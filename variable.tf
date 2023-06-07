@@ -1,3 +1,3 @@
 variable "acr_name" {
- default = "acr"
+ default = "oguzhanhub"
 }

@@ -101,7 +101,7 @@ resource "azurerm_service_plan" "example" {
 }
 
 resource "azurerm_linux_web_app" "webapp1" {
-  name                = "oaydoganwebapp"
+  name                = "oaydoganwebapp1"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   service_plan_id     = azurerm_service_plan.example.id
