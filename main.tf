@@ -103,7 +103,7 @@ resource "azurerm_service_plan" "example" {
 resource "azurerm_linux_web_app" "webapp1" {
   name                = "oaydoganwebapp"
   resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_service_plan.rg.location
+  location            = azurerm_resource_group.rg.location
   service_plan_id     = azurerm_service_plan.example.id
 
   site_config {}
@@ -112,7 +112,7 @@ resource "azurerm_linux_web_app" "webapp1" {
 resource "azurerm_linux_web_app" "webapp2" {
   name                = "oaydoganwebapp2"
   resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_service_plan.rg.location
+  location            = azurerm_resource_group.rg.location
   service_plan_id     = azurerm_service_plan.example.id
 
   site_config {}
