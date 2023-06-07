@@ -316,14 +316,14 @@ resource "azurerm_virtual_machine" "vm1" {
   os_profile {
     computer_name  = var.vm_name
     admin_username = var.admin_username
-    custom_data = data.template_file.userdata.rendered
+    custom_data = file("userdata.sh")
+    
   }
   os_profile_linux_config {
     disable_password_authentication = true
     ssh_keys {
       path = "/home/${var.admin_username}/.ssh/authorized_keys"
       key_data = data.azurerm_ssh_public_key.ssh_public_key.public_key
-
    }
  }
 }
@@ -354,9 +354,9 @@ data "azurerm_ssh_public_key" "ssh_public_key" {
   name                = var.ssh_key_name
 }
 
-data "template_file" "userdata" {
-  template = file("${abspath(path.module)}/userdata.sh")
-}
+# data "template_file" "userdata" {
+#   template = file("${abspath(path.module)}/userdata.sh")
+# }
 
 resource "azurerm_network_interface_security_group_association" "nic1" {
   network_interface_id      = azurerm_network_interface.main.id
@@ -376,18 +376,6 @@ resource "azurerm_network_security_group" "nsg1" {
         protocol                   = "Tcp"
         source_port_range          = "*"
         destination_port_range     = "22"
-        source_address_prefix      = "*"
-        destination_address_prefix = "*"
-    }
-
-security_rule {
-        name                       = "AllowJenkins"
-        priority                   = 120
-        direction                  = "Inbound"
-        access                     = "Allow"
-        protocol                   = "Tcp"
-        source_port_range          = "*"
-        destination_port_range     = "8080"
         source_address_prefix      = "*"
         destination_address_prefix = "*"
     }
