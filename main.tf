@@ -84,14 +84,6 @@ module "app2endpoint" {
   subnet_name = "app2endpoint"
   address_prefixes = ["10.0.5.64/26"]
 }
-##PUBLIC IP##
-resource "azurerm_public_ip" "pip" {
-  name                = "DemoPublicIp"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
-  allocation_method   = "Static"
-}
-
 resource "azurerm_service_plan" "example" {
   name                = "oaydoganwebapp"
   resource_group_name = azurerm_resource_group.rg.name
@@ -379,4 +371,16 @@ resource "azurerm_network_security_group" "nsg1" {
         source_address_prefix      = "*"
         destination_address_prefix = "*"
     }
+}
+
+data "azurerm_subscription" "current" {}
+
+data "azurerm_role_definition" "contributor" {
+  name = "AcrPush"
+}
+
+resource "azurerm_role_assignment" "example" {
+  scope              = data.azurerm_subscription.current.id
+  role_definition_id = "${data.azurerm_subscription.current.id}${data.azurerm_role_definition.contributor.id}"
+  principal_id       = azurerm_virtual_machine.vm1.identity[0].principal_id
 }
