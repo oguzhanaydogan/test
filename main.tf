@@ -5,6 +5,12 @@ terraform {
       version = "3.59.0"
     }
   }
+  backend "azurerm" {
+    resource_group_name  = "DefaultResourceGroup-EUS"
+    storage_account_name = "ccseyhan2"
+    container_name       = "terraformstate"
+    key                  = "terraform.tfstate"
+  }
 }
 
 provider "azurerm" {
