@@ -18,9 +18,6 @@ resource "azurerm_private_endpoint" "private_endpoint" {
   
   private_dns_zone_group {
     name = "${var.attached_resource_name}-private-dns-zone-group"
-    
-    private_dns_zone_ids = [
-      var.private_dns_zone_ids
-    ]
+    private_dns_zone_ids = var.private_dns_zone_ids
   }
 }
