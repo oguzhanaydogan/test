@@ -123,14 +123,14 @@ data "azurerm_key_vault_secret" "db_password" {
 
 data "azurerm_client_config" "current" {}
 
-data "azuread_service_principal" "current" {
-  display_name = "azure-cli-2023-06-08-16-04-04"
-}
+# data "azuread_service_principal" "current" {
+#   display_name = "azure-cli-2023-06-08-16-04-04"
+# }
 
 resource "azurerm_key_vault_access_policy" "kvaccess" {
   key_vault_id = data.azurerm_key_vault.example.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = data.azuread_service_principal.current.object_id
+  object_id    = data.azurerm_client_config.current.object_id
 
   key_permissions = [
     "Get", "List",
