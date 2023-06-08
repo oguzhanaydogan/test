@@ -8,5 +8,5 @@ resource "azurerm_private_dns_zone_virtual_network_link" "private_dns_zone_virtu
   name                  = "${var.attached_resource_name}-private-dns-zone-vnet-link"
   private_dns_zone_name = azurerm_private_dns_zone.private_dns_zone.name
   resource_group_name   = var.resourcegroup
-  virtual_network_id    = var.virtualnetwork_id
+  virtual_network_id    = var.virtual_network_id
 }
