@@ -111,6 +111,16 @@ module "webapp2" {
   service_plan_id = azurerm_service_plan.example.id
 }
 
+resource "azurerm_app_service_virtual_network_swift_connection" "vnet_integration1" {
+  app_service_id = module.webapp1.id
+  subnet_id      = module.app_subnet.id
+}
+
+resource "azurerm_app_service_virtual_network_swift_connection" "vnet_integration2" {
+  app_service_id = module.webapp2.id
+  subnet_id      = module.app_subnet.id
+}
+
 module "ACR" {
   source = "./modules/AzureContainerRegistry"
   name = "coyhub"
