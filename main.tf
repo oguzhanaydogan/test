@@ -172,7 +172,7 @@ module "webapp1" {
   resource_group_name = module.resourcegroup.name
   location = module.resourcegroup.location
   service_plan_id = azurerm_service_plan.example.id
-  key_vault_reference_identity_id = module.webapp1.identity[0].principal_id
+  key_vault_reference_identity_id = module.webapp1.key_vault_reference_identity_id
 }
 
 module "webapp2" {
@@ -181,7 +181,7 @@ module "webapp2" {
   resource_group_name = module.resourcegroup.name
   location = module.resourcegroup.location
   service_plan_id = azurerm_service_plan.example.id
-  key_vault_reference_identity_id = module.webapp2.identity[0].principal_id
+  key_vault_reference_identity_id = module.webapp2.key_vault_reference_identity_id
 }
 
 resource "azurerm_app_service_virtual_network_swift_connection" "vnet_integration1" {
@@ -264,7 +264,7 @@ module "mysql" {
   server_name = "coy-database-server"
   location = module.resourcegroup.location
   resourcegroup = module.resourcegroup.name
-  db_name = "coy-db"
+  db_name = "phonebook"
   admin_username = "coy-admin"
   admin_password = data.azurerm_key_vault_secret.db_password.value
 }
