@@ -123,7 +123,7 @@ data "azurerm_key_vault_secret" "db_password" {
 
 data "azurerm_client_config" "current" {}
 
-data "azuread_service_principal" "example" {
+data "azuread_service_principal" "current" {
   display_name = "azure-cli-2023-06-08-16-04-04"
 }
 
