@@ -4,6 +4,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "3.59.0"
     }
+    azuread = {
+      source = "hashicorp/azuread"
+      version = "2.39.0"
+    }
   }
   backend "azurerm" {
     resource_group_name  = "DefaultResourceGroup-EUS"
@@ -15,6 +19,9 @@ terraform {
 
 provider "azurerm" {
   features{}
+}
+
+provider "azuread" {
 }
 ##RG##
 
@@ -108,17 +115,22 @@ data "azurerm_key_vault" "example" {
   name                = "coykeyvault"
   resource_group_name = module.resourcegroup.name
 }
-# data "azurerm_key_vault_secret" "db_password" {
-#   name         = "MYSQLPASSWORD"
-#   key_vault_id = data.azurerm_key_vault.example.id
-#   depends_on = [ azurerm_key_vault_access_policy.kvaccess ]
-# }
+data "azurerm_key_vault_secret" "db_password" {
+  name         = "MYSQLPASSWORD"
+  key_vault_id = data.azurerm_key_vault.example.id
+  depends_on = [ azurerm_key_vault_access_policy.kvaccess ]
+}
 
 data "azurerm_client_config" "current" {}
+
+data "azuread_service_principal" "example" {
+  display_name = "azure-cli-2023-06-08-16-04-04"
+}
+
 resource "azurerm_key_vault_access_policy" "kvaccess" {
   key_vault_id = data.azurerm_key_vault.example.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = data.azurerm_client_config.current.service_principal_object_id
+  object_id    = data.azuread_service_principal.current.object_id
 
   key_permissions = [
     "Get", "List",
@@ -134,7 +146,7 @@ module "webapp1" {
   location = module.resourcegroup.location
   service_plan_id = azurerm_service_plan.example.id
   app_settings = {
-    # "MYSQLPASSWORD"=data.azurerm_key_vault_secret.db_password.value
+    "MYSQLPASSWORD"=data.azurerm_key_vault_secret.db_password.value
     }
 }
 
@@ -145,7 +157,7 @@ module "webapp2" {
   location = module.resourcegroup.location
   service_plan_id = azurerm_service_plan.example.id
     app_settings = {
-    # "MYSQLPASSWORD"=data.azurerm_key_vault_secret.db_password.value
+    "MYSQLPASSWORD"=data.azurerm_key_vault_secret.db_password.value
     }
   }
 
@@ -224,7 +236,7 @@ module "mysql" {
   resourcegroup = module.resourcegroup.name
   db_name = "phonebook"
   admin_username = "coy-admin"
-  admin_password = "Test1234." # data.azurerm_key_vault_secret.db_password.value
+  admin_password = data.azurerm_key_vault_secret.db_password.value
 }
 
 module "private_dns_zone_mysql" {
