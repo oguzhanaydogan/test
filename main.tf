@@ -118,7 +118,7 @@ data "azurerm_client_config" "current" {}
 resource "azurerm_key_vault_access_policy" "kvaccess" {
   key_vault_id = data.azurerm_key_vault.example.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = data.azurerm_client_config.current.object_id
+  object_id    = data.azurerm_client_config.current.service_principal_object_id
 
   key_permissions = [
     "Get", "List",
