@@ -134,7 +134,7 @@ module "private_dns_zone_privatelink" {
   name = "privatelink.azurecr.io"
   resourcegroup = module.resourcegroup.name
   virtual_network_id = module.virtualnetwork.id
-  attached_to = module.ACR.name
+  attached_resource_name = module.ACR.name
 }
 
 module "private_endpoint_acr" {
