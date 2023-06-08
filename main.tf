@@ -38,6 +38,7 @@ module "app_subnet" {
   virtual_network_name = module.virtualnetwork.name
   subnet_name = "app"
   address_prefixes = ["10.0.1.0/24"]
+  delegation = true
 }
 
 module "key_vault_subnet" {
@@ -128,51 +129,15 @@ module "ACR" {
   location = module.resourcegroup.location
 }
 
-# Create azure container registry private endpoint
-resource "azurerm_private_dns_zone" "acr_private_dns_zone" {
-  name                = "privatelink.azurecr.io"
-  resource_group_name =  module.resourcegroup.name
+module "private_dns_zone_privatelink" {
+  source = "./modules/privatednszone"
+  name = "privatelink.azurecr.io"
+  resourcegroup = module.resourcegroup.name
+  virtual_network_id = module.virtualnetwork.id
+  attached_to = module.ACR.name
 }
 
-# Create azure private dns zone virtual network link for acr private endpoint vnet
-resource "azurerm_private_dns_zone_virtual_network_link" "acr_private_dns_zone_virtual_network_link" {
-  name                  = "${module.ACR.name}-private-dns-zone-vnet-link"
-  private_dns_zone_name = azurerm_private_dns_zone.acr_private_dns_zone.name
-  resource_group_name   = module.resourcegroup.name
-  virtual_network_id    = module.virtualnetwork.id
-}
 
-# Create azure private endpoint
-resource "azurerm_private_endpoint" "acr_private_endpoint" {
-  name                = "${module.ACR.name}-private-endpoint"
-  resource_group_name = module.resourcegroup.name
-  location            = module.resourcegroup.location
-  subnet_id           = module.acr_subnet.id
-  
-  
-  private_service_connection {
-    name                           = "${module.ACR.name}-service-connection"
-    private_connection_resource_id = module.ACR.id
-    is_manual_connection           = false
-    subresource_names = [
-      "registry"
-    ]
-  }
-  
-  private_dns_zone_group {
-    name = "${module.ACR.name}-private-dns-zone-group"
-    
-    private_dns_zone_ids = [
-      azurerm_private_dns_zone.acr_private_dns_zone.id
-    ]  
-  }
- 
-  depends_on = [
-    module.virtualnetwork,
-    module.acr_subnet,
-    module.ACR
-  ]
-}
 
 resource "azurerm_virtual_machine" "vm1" {
   name                  = var.vm_name

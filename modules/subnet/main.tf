@@ -4,12 +4,15 @@ resource "azurerm_subnet" "subnet" {
   virtual_network_name = var.virtual_network_name
   address_prefixes     = var.address_prefixes
 
-    delegation {
-    name = "example-delegation"
+  dynamic "delegation" {
+    for_each = var.delegation ? [1] : []
+    content {
+      name = "example-delegation"
 
-    service_delegation {
-      name    = "Microsoft.Web/serverFarms"
-      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
+      service_delegation {
+          name    = "Microsoft.Web/serverFarms"
+          actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
+      }
     }
   }
 }
