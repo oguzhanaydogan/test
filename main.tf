@@ -142,7 +142,7 @@ module "private_endpoint_acr" {
     resourcegroup = module.resourcegroup.name
     location = module.resourcegroup.location
     subnet_id = module.acr_subnet.id
-    private_dns_zone_ids = [module.private_dns_zone_privatelink.id]
+    private_dns_zone_ids = ["${module.private_dns_zone_privatelink.id}"]
     attached_resource_name = module.ACR.name
     attached_resource_id = module.ACR.id
 }
