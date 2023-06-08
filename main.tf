@@ -224,7 +224,7 @@ module "mysql" {
   resourcegroup = module.resourcegroup.name
   db_name = "phonebook"
   admin_username = "coy-admin"
-  admin_password = data.azurerm_key_vault_secret.db_password.value
+  admin_password = "Test1234." # data.azurerm_key_vault_secret.db_password.value
 }
 
 module "private_dns_zone_mysql" {
