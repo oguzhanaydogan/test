@@ -1,7 +1,3 @@
-variable "acr_name" {
- default = "oguzhanhub"
-}
-
 variable "vm_name" {
     default = "acr-vm"
 }

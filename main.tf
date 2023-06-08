@@ -21,18 +21,18 @@ provider "azurerm" {
 module "resourcegroup" {
   source = "./modules/ResourceGroup"
   location = "East US"
-  resource_group_name = "DemoResourceGroup"
+  name = "DemoResourceGroup"
 }
 ##VNET##
 module "virtualnetwork" {
   source = "./modules/VirtualNetwork"
-  virtual_network_name = "example-network"
+  name = "example-network"
   location = module.resourcegroup.location
-  resource_group_name = module.resource_group_name.name
+  resource_group_name = module.resourcegroup.name
   address_space = ["10.0.0.0/16"]
 }
 
-module "app" {
+module "app_subnet" {
   source = "./modules/subnet"
   resource_group_name = module.resourcegroup.name
   virtual_network_name = module.virtualnetwork.name
@@ -40,7 +40,7 @@ module "app" {
   address_prefixes = ["10.0.1.0/24"]
 }
 
-module "key_vault" {
+module "key_vault_subnet" {
   source = "./modules/subnet"
   resource_group_name = module.resourcegroup.name
   virtual_network_name = module.virtualnetwork.name
@@ -48,7 +48,7 @@ module "key_vault" {
   address_prefixes = ["10.0.2.0/24"]
 }
 
-module "default" {
+module "default_subnet" {
   source = "./modules/subnet"
   resource_group_name = module.resourcegroup.name
   virtual_network_name = module.virtualnetwork.name
@@ -56,7 +56,7 @@ module "default" {
   address_prefixes = ["10.0.0.0/24"]
 }
 
-module "acr" {
+module "acr_subnet" {
   source = "./modules/subnet"
   resource_group_name = module.resourcegroup.name
   virtual_network_name = module.virtualnetwork.name
@@ -64,7 +64,7 @@ module "acr" {
   address_prefixes = ["10.0.3.0/24"]
 }
 
-module "appgateway" {
+module "appgateway_subnet" {
   source = "./modules/subnet"
   resource_group_name = module.resourcegroup.name
   virtual_network_name = module.virtualnetwork.name
@@ -72,7 +72,7 @@ module "appgateway" {
   address_prefixes = ["10.0.4.0/24"]
 }
 
-module "app1endpoint" {
+module "app1endpoint_subnet" {
   source = "./modules/subnet"
   resource_group_name = module.resourcegroup.name
   virtual_network_name = module.virtualnetwork.name
@@ -80,7 +80,7 @@ module "app1endpoint" {
   address_prefixes = ["10.0.5.0/26"]
 }
 
-module "app2endpoint" {
+module "app2endpoint_subnet" {
   source = "./modules/subnet"
   resource_group_name = module.resourcegroup.name
   virtual_network_name = module.virtualnetwork.name
@@ -95,31 +95,27 @@ resource "azurerm_service_plan" "example" {
   sku_name            = "P1v2"
 }
 
-resource "azurerm_linux_web_app" "webapp1" {
-  name                = "oaydoganwebapp1"
+module "webapp1" {
+  source = "./modules/webapp"
+  name = "coywebapp1"
   resource_group_name = module.resourcegroup.name
-  location            = module.resourcegroup.location
-  service_plan_id     = azurerm_service_plan.example.id
-
-  site_config {}
+  location = module.resourcegroup.location
+  service_plan_id = azurerm_service_plan.example.id
 }
 
-resource "azurerm_linux_web_app" "webapp2" {
-  name                = "oaydoganwebapp2"
+module "webapp2" {
+  source = "./modules/webapp"
+  name = "coywebapp2"
   resource_group_name = module.resourcegroup.name
-  location            = module.resourcegroup.location
-  service_plan_id     = azurerm_service_plan.example.id
-
-  site_config {}
+  location = module.resourcegroup.location
+  service_plan_id = azurerm_service_plan.example.id
 }
 
-resource "azurerm_container_registry" "acr" {
-  name                          = var.acr_name
-  location                      = module.resourcegroup.location
-  resource_group_name           = module.resourcegroup.name
-  admin_enabled                 = false
-  sku                           = "Premium"
-  public_network_access_enabled = false
+module "ACR" {
+  source = "./modules/AzureContainerRegistry"
+  name = "coyhub"
+  resource_group_name = module.resourcegroup.name
+  location = module.resourcegroup.location
 }
 
 # Create azure container registry private endpoint
@@ -130,7 +126,7 @@ resource "azurerm_private_dns_zone" "acr_private_dns_zone" {
 
 # Create azure private dns zone virtual network link for acr private endpoint vnet
 resource "azurerm_private_dns_zone_virtual_network_link" "acr_private_dns_zone_virtual_network_link" {
-  name                  = "${var.acr_name}-private-dns-zone-vnet-link"
+  name                  = "${module.ACR.name}-private-dns-zone-vnet-link"
   private_dns_zone_name = azurerm_private_dns_zone.acr_private_dns_zone.name
   resource_group_name   = module.resourcegroup.name
   virtual_network_id    = module.virtualnetwork.id
@@ -138,15 +134,15 @@ resource "azurerm_private_dns_zone_virtual_network_link" "acr_private_dns_zone_v
 
 # Create azure private endpoint
 resource "azurerm_private_endpoint" "acr_private_endpoint" {
-  name                = "${var.acr_name}-private-endpoint"
+  name                = "${module.ACR.name}-private-endpoint"
   resource_group_name = module.resourcegroup.name
   location            = module.resourcegroup.location
-  subnet_id           = module.acr.id
+  subnet_id           = module.acr_subnet.id
   
   
   private_service_connection {
-    name                           = "${var.acr_name}-service-connection"
-    private_connection_resource_id = azurerm_container_registry.acr.id
+    name                           = "${module.ACR.name}-service-connection"
+    private_connection_resource_id = module.ACR.id
     is_manual_connection           = false
     subresource_names = [
       "registry"
@@ -154,7 +150,7 @@ resource "azurerm_private_endpoint" "acr_private_endpoint" {
   }
   
   private_dns_zone_group {
-    name = "${var.acr_name}-private-dns-zone-group"
+    name = "${module.ACR.name}-private-dns-zone-group"
     
     private_dns_zone_ids = [
       azurerm_private_dns_zone.acr_private_dns_zone.id
@@ -162,9 +158,9 @@ resource "azurerm_private_endpoint" "acr_private_endpoint" {
   }
  
   depends_on = [
-    azurerm_virtual_network.vnet,
-    module.acr,
-    azurerm_container_registry.acr
+    module.virtualnetwork,
+    module.acr_subnet,
+    module.ACR
   ]
 }
 
@@ -221,7 +217,7 @@ resource "azurerm_network_interface" "main" {
 
   ip_configuration {
     name                          = "testconfiguration1"
-    subnet_id                     = module.acr.id
+    subnet_id                     = module.acr_subnet.id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id = azurerm_public_ip.pip1.id
   }
@@ -262,7 +258,7 @@ resource "azurerm_network_security_group" "nsg1" {
 
 data "azurerm_subscription" "current" {}
 
-data "azurerm_role_definition" "contributor" {
+data "azurerm_role_definition" "acrpush" {
   name = "AcrPush"
 }
 
