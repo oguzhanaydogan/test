@@ -88,6 +88,14 @@ module "app2endpoint_subnet" {
   subnet_name = "app2endpoint"
   address_prefixes = ["10.0.5.64/26"]
 }
+
+module "mysql_endpoint_subnet" {
+  source = "./modules/subnet"
+  resource_group_name = module.resourcegroup.name
+  virtual_network_name = module.virtualnetwork.name
+  subnet_name = "mysql_endpoint"
+  address_prefixes = ["10.0.6.0/24"]
+}
 resource "azurerm_service_plan" "example" {
   name                = "oaydoganwebapp"
   resource_group_name = module.resourcegroup.name
@@ -138,7 +146,7 @@ module "private_dns_zone_acr" {
 }
 
 module "private_endpoint_acr" {
-  source = "./modules/privateendpoint"
+    source = "./modules/privateendpoint"
     resourcegroup = module.resourcegroup.name
     location = module.resourcegroup.location
     subnet_id = module.acr_subnet.id
@@ -157,7 +165,7 @@ module "private_dns_zone_apps" {
 }
 
 module "private_endpoint_app1" {
-  source = "./modules/privateendpoint"
+    source = "./modules/privateendpoint"
     resourcegroup = module.resourcegroup.name
     location = module.resourcegroup.location
     subnet_id = module.app1endpoint_subnet.id
@@ -168,7 +176,7 @@ module "private_endpoint_app1" {
 }
 
 module "private_endpoint_app2" {
-  source = "./modules/privateendpoint"
+    source = "./modules/privateendpoint"
     resourcegroup = module.resourcegroup.name
     location = module.resourcegroup.location
     subnet_id = module.app2endpoint_subnet.id
@@ -177,6 +185,46 @@ module "private_endpoint_app2" {
     attached_resource_id = module.webapp2.id
     subresource_name = "sites"
 }
+
+
+data "azurerm_key_vault" "example" {
+  name                = "ccseyhanvault"
+  resource_group_name = "test"
+}
+data "azurerm_key_vault_secret" "db_password" {
+  name         = "MYSQLPASSWORD"
+  key_vault_id = data.azurerm_key_vault.example.id
+}
+module "mysql" {
+  source = "./modules/MySql"
+  server_name = "coy-database-server"
+  location = module.resourcegroup.location
+  resourcegroup = module.resourcegroup.name
+  db_name = "coy-db"
+  admin_username = "coy-admin"
+  admin_password = data.azurerm_key_vault.db_password.value
+}
+
+module "private_dns_zone_mysql" {
+  source = "./modules/privatednszone"
+  name = "privatelink.mysql.database.azure.com"
+  resourcegroup = module.resourcegroup.name
+  attached_resource_name = module.mysql.name
+  virtual_network_id = module.virtualnetwork.id
+}
+
+module "private_endpoint_mysql" {
+  source = "./modules/privateendpoint"
+  attached_resource_name = module.mysql.name
+  resourcegroup = module.resourcegroup.name
+  location = module.resourcegroup.location
+  subnet_id = module.mysql_endpoint_subnet.id
+  attached_resource_id = module.mysql.id
+  private_dns_zone_ids = ["${module.private_dns_zone_mysql.id}"]
+  subresource_name = "mysqlServer"
+  }
+
+
 
 
 
