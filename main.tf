@@ -108,11 +108,11 @@ data "azurerm_key_vault" "example" {
   name                = "coykeyvault"
   resource_group_name = module.resourcegroup.name
 }
-data "azurerm_key_vault_secret" "db_password" {
-  name         = "MYSQLPASSWORD"
-  key_vault_id = data.azurerm_key_vault.example.id
-  depends_on = [ azurerm_key_vault_access_policy.kvaccess ]
-}
+# data "azurerm_key_vault_secret" "db_password" {
+#   name         = "MYSQLPASSWORD"
+#   key_vault_id = data.azurerm_key_vault.example.id
+#   depends_on = [ azurerm_key_vault_access_policy.kvaccess ]
+# }
 
 data "azurerm_client_config" "current" {}
 resource "azurerm_key_vault_access_policy" "kvaccess" {
