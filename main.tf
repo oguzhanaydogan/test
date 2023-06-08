@@ -104,74 +104,36 @@ resource "azurerm_service_plan" "example" {
   sku_name            = "P1v2"
 }
 
-data "azuread_service_principal" "app1_sp" {
-  display_name = module.webapp1.name
-  depends_on   = [
-    module.webapp1
-  ]
+data "azurerm_key_vault" "example" {
+  name                = "coykeyvault"
+  resource_group_name = module.resourcegroup.name
 }
-
-data "azuread_service_principal" "app2_sp" {
-  display_name = module.webapp2.name
-  depends_on   = [
-    module.webapp2
-  ]
-}
-
-data "azurerm_client_config" "current" {
-}
-
-resource "azurerm_key_vault_access_policy" "kv_read_access_policy1" {
+data "azurerm_key_vault_secret" "db_password" {
+  name         = "MYSQLPASSWORD"
   key_vault_id = data.azurerm_key_vault.example.id
+}
 
-  tenant_id = data.azurerm_client_config.current.tenant_id
-  object_id = data.azuread_service_principal.app1_sp.id
-
-  secret_permissions = [
-    "Get",
-    "List"
-  ]
-  
-  certificate_permissions = [
-    "Get",
-    "List"
-  ]
+resource "azurerm_key_vault_access_policy" "kvaccess" {
+  key_vault_id = data.azurerm_key_vault.example.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = data.azurerm_client_config.current.object_id
 
   key_permissions = [
-    "Get",
-    "List"
+    "Get", "List",
   ]
-}
-
-resource "azurerm_key_vault_access_policy" "kv_read_access_policy2" {
-  key_vault_id = data.azurerm_key_vault.example.id
-
-  tenant_id = data.azurerm_client_config.current.tenant_id
-  object_id = data.azuread_service_principal.app2_sp.id
-
   secret_permissions = [
-    "Get",
-    "List"
-  ]
-  
-  certificate_permissions = [
-    "Get",
-    "List"
-  ]
-
-  key_permissions = [
-    "Get",
-    "List"
+    "Get", "List",
   ]
 }
-
-
 module "webapp1" {
   source = "./modules/webapp"
   name = "coywebapp1"
   resource_group_name = module.resourcegroup.name
   location = module.resourcegroup.location
   service_plan_id = azurerm_service_plan.example.id
+  app_settings = {
+    "MYSQLPASSWORD"=data.azurerm_key_vault_secret.db_password.value
+    }
 }
 
 module "webapp2" {
@@ -249,14 +211,7 @@ module "private_endpoint_app2" {
 }
 
 
-data "azurerm_key_vault" "example" {
-  name                = "coykeyvault"
-  resource_group_name = module.resourcegroup.name
-}
-data "azurerm_key_vault_secret" "db_password" {
-  name         = "MYSQLPASSWORD"
-  key_vault_id = data.azurerm_key_vault.example.id
-}
+
 module "mysql" {
   source = "./modules/MySql"
   server_name = "coy-database-server"
