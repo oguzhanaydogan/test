@@ -188,8 +188,8 @@ module "private_endpoint_app2" {
 
 
 data "azurerm_key_vault" "example" {
-  name                = "ccseyhanvault"
-  resource_group_name = "test"
+  name                = "coykeyvault"
+  resource_group_name = module.resourcegroup.name
 }
 data "azurerm_key_vault_secret" "db_password" {
   name         = "MYSQLPASSWORD"
