@@ -113,6 +113,7 @@ data "azurerm_key_vault_secret" "db_password" {
   key_vault_id = data.azurerm_key_vault.example.id
 }
 
+data "azurerm_client_config" "current" {}
 resource "azurerm_key_vault_access_policy" "kvaccess" {
   key_vault_id = data.azurerm_key_vault.example.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
@@ -352,6 +353,8 @@ resource "azurerm_network_security_group" "nsg1" {
 }
 
 data "azurerm_subscription" "current" {}
+
+
 
 data "azurerm_role_definition" "acrpush" {
   name = "AcrPush"
