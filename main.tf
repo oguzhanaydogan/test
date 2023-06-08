@@ -134,7 +134,7 @@ module "webapp1" {
   location = module.resourcegroup.location
   service_plan_id = azurerm_service_plan.example.id
   app_settings = {
-    "MYSQLPASSWORD"=data.azurerm_key_vault_secret.db_password.value
+    # "MYSQLPASSWORD"=data.azurerm_key_vault_secret.db_password.value
     }
 }
 
@@ -145,7 +145,7 @@ module "webapp2" {
   location = module.resourcegroup.location
   service_plan_id = azurerm_service_plan.example.id
     app_settings = {
-    "MYSQLPASSWORD"=data.azurerm_key_vault_secret.db_password.value
+    # "MYSQLPASSWORD"=data.azurerm_key_vault_secret.db_password.value
     }
   }
 
