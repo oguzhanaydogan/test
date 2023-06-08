@@ -129,7 +129,7 @@ module "ACR" {
   location = module.resourcegroup.location
 }
 
-module "private_dns_zone_privatelink" {
+module "private_dns_zone_acr" {
   source = "./modules/privatednszone"
   name = "privatelink.azurecr.io"
   resourcegroup = module.resourcegroup.name
@@ -142,10 +142,49 @@ module "private_endpoint_acr" {
     resourcegroup = module.resourcegroup.name
     location = module.resourcegroup.location
     subnet_id = module.acr_subnet.id
-    private_dns_zone_ids = ["${module.private_dns_zone_privatelink.id}"]
+    private_dns_zone_ids = ["${module.private_dns_zone_acr.id}"]
     attached_resource_name = module.ACR.name
     attached_resource_id = module.ACR.id
 }
+
+module "private_dns_zone_apps" {
+  source = "./modules/privatednszone"
+  name = "privatelink.azurewebsites.net"
+  resourcegroup = module.resourcegroup.name
+  virtual_network_id = module.virtualnetwork.id
+  attached_resource_name = "apps"
+}
+
+module "private_endpoint_app1" {
+  source = "./modules/privateendpoint"
+    resourcegroup = module.resourcegroup.name
+    location = module.resourcegroup.location
+    subnet_id = module.app1endpoint_subnet.id
+    private_dns_zone_ids = ["${module.private_dns_zone_apps.id}"]
+    attached_resource_name = module.webapp1.name
+    attached_resource_id = module.webapp1.id
+}
+
+module "private_endpoint_app2" {
+  source = "./modules/privateendpoint"
+    resourcegroup = module.resourcegroup.name
+    location = module.resourcegroup.location
+    subnet_id = module.app1endpoint_subnet.id
+    private_dns_zone_ids = ["${module.private_dns_zone_apps.id}"]
+    attached_resource_name = module.webapp2.name
+    attached_resource_id = module.webapp2.id
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
