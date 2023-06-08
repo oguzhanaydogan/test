@@ -104,12 +104,75 @@ resource "azurerm_service_plan" "example" {
   sku_name            = "P1v2"
 }
 
+data "azuread_service_principal" "app1_sp" {
+  display_name = module.webapp1.name
+  depends_on   = [
+    module.webapp1
+  ]
+}
+
+data "azuread_service_principal" "app2_sp" {
+  display_name = module.webapp2.name
+  depends_on   = [
+    module.webapp2
+  ]
+}
+
+data "azurerm_client_config" "current" {
+}
+
+resource "azurerm_key_vault_access_policy" "kv_read_access_policy1" {
+  key_vault_id = data.azurerm_key_vault.example.id
+
+  tenant_id = data.azurerm_client_config.current.tenant_id
+  object_id = data.azuread_service_principal.app1_sp.id
+
+  secret_permissions = [
+    "Get",
+    "List"
+  ]
+  
+  certificate_permissions = [
+    "Get",
+    "List"
+  ]
+
+  key_permissions = [
+    "Get",
+    "List"
+  ]
+}
+
+resource "azurerm_key_vault_access_policy" "kv_read_access_policy2" {
+  key_vault_id = data.azurerm_key_vault.example.id
+
+  tenant_id = data.azurerm_client_config.current.tenant_id
+  object_id = data.azuread_service_principal.app2_sp.id
+
+  secret_permissions = [
+    "Get",
+    "List"
+  ]
+  
+  certificate_permissions = [
+    "Get",
+    "List"
+  ]
+
+  key_permissions = [
+    "Get",
+    "List"
+  ]
+}
+
+
 module "webapp1" {
   source = "./modules/webapp"
   name = "coywebapp1"
   resource_group_name = module.resourcegroup.name
   location = module.resourcegroup.location
   service_plan_id = azurerm_service_plan.example.id
+  key_vault_reference_identity_id = module.webapp1.identity[0].principal_id
 }
 
 module "webapp2" {
@@ -118,6 +181,7 @@ module "webapp2" {
   resource_group_name = module.resourcegroup.name
   location = module.resourcegroup.location
   service_plan_id = azurerm_service_plan.example.id
+  key_vault_reference_identity_id = module.webapp2.identity[0].principal_id
 }
 
 resource "azurerm_app_service_virtual_network_swift_connection" "vnet_integration1" {
