@@ -17,6 +17,7 @@ provider "azurerm" {
   features{}
 }
 ##RG##
+
 module "resourcegroup" {
   source = "./modules/ResourceGroup"
   location = "East US"

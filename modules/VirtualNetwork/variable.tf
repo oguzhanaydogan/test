@@ -10,6 +10,6 @@ variable "address_space" {
   default = ""
 }
 
-variable "virtual_network_name" {
+variable "name" {
     default = ""
 }
