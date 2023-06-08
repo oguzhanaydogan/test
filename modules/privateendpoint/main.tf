@@ -11,9 +11,9 @@ resource "azurerm_private_endpoint" "private_endpoint" {
     name                           = "${var.attached_resource_name}-service-connection"
     private_connection_resource_id = var.attached_resource_id
     is_manual_connection           = false
-    subresource_names = [
-      "registry"
-    ]
+    # subresource_names = [
+    #   "registry"
+    # ]
   }
   
   private_dns_zone_group {
