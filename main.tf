@@ -268,4 +268,3 @@ resource "azurerm_role_assignment" "example" {
   principal_id       = azurerm_virtual_machine.vm1.identity[0].principal_id
 }
 
-#test
