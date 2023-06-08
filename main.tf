@@ -142,6 +142,9 @@ module "webapp2" {
   resource_group_name = module.resourcegroup.name
   location = module.resourcegroup.location
   service_plan_id = azurerm_service_plan.example.id
+    app_settings = {
+    "MYSQLPASSWORD"=data.azurerm_key_vault_secret.db_password.value
+    }
   }
 
 resource "azurerm_app_service_virtual_network_swift_connection" "vnet_integration1" {
