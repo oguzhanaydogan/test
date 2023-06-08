@@ -16,3 +16,6 @@ variable "attached_resource_id" {
 variable "private_dns_zone_ids" {
 }
 
+variable "subresource_name" {
+}
+

@@ -12,7 +12,7 @@ resource "azurerm_private_endpoint" "private_endpoint" {
     private_connection_resource_id = var.attached_resource_id
     is_manual_connection           = false
     subresource_names = [
-      "sites"
+      var.subresource_name
     ]
   }
   

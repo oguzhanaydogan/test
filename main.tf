@@ -145,6 +145,7 @@ module "private_endpoint_acr" {
     private_dns_zone_ids = ["${module.private_dns_zone_acr.id}"]
     attached_resource_name = module.ACR.name
     attached_resource_id = module.ACR.id
+    subresource_name = "registry"
 }
 
 module "private_dns_zone_apps" {
@@ -163,6 +164,7 @@ module "private_endpoint_app1" {
     private_dns_zone_ids = ["${module.private_dns_zone_apps.id}"]
     attached_resource_name = module.webapp1.name
     attached_resource_id = module.webapp1.id
+    subresource_name = "sites"
 }
 
 module "private_endpoint_app2" {
@@ -173,6 +175,7 @@ module "private_endpoint_app2" {
     private_dns_zone_ids = ["${module.private_dns_zone_apps.id}"]
     attached_resource_name = module.webapp2.name
     attached_resource_id = module.webapp2.id
+    subresource_name = "sites"
 }
 
 
