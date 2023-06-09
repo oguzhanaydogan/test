@@ -40,7 +40,6 @@ module "subnets" {
   address_prefixes = each.value.address_prefixes
   delegation = each.value.delegation
 }
-#test
 
 # module "app_subnet" {
 #   source = "./modules/subnet"

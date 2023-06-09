@@ -22,31 +22,24 @@ variable "subnets"  {
         }
     "key-vault-subnet" = {
         address_prefixes = ["10.0.2.0/24"]
-        delegation = false
         }
     "default_subnet" = {
         address_prefixes = ["10.0.0.0/24"]
-        delegation = false
         }
     "acr_subnet" = {
         address_prefixes = ["10.0.3.0/24"]
-        delegation = false
         }
     "appgateway_subnet" = {
         address_prefixes = ["10.0.4.0/24"]
-        delegation = false
         }  
     "app1endpoint_subnet" = {
         address_prefixes = ["10.0.5.0/26"]
-        delegation = false
         } 
     "app2endpoint_subnet" = {
         address_prefixes = ["10.0.5.64/26"]
-        delegation = false
         } 
     "mysql_endpoint_subnet" = {
         address_prefixes = ["10.0.6.0/24"]
-        delegation = false
         }
     }
 }
