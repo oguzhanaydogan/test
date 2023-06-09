@@ -82,7 +82,12 @@ module "webapp1" {
   
   app_settings = {
     "MYSQLPASSWORD"=data.azurerm_key_vault_secret.db_password.value
+    "MYSQL_DATABASE_HOST"=module.mysql.host
+    "MYSQL_DATABASE"=module.mysql.database_name
+    "MYSQL_USER"=module.mysql.database_username
     "APPINSIGHTS_INSTRUMENTATIONKEY"=azurerm_application_insights.insight.instrumentation_key
+    "APPLICATIONINSIGHTS_CONNECTION_STRING"=azurerm_application_insights.insight.connection_string
+    "ApplicationInsightsAgent_EXTENSION_VERSION"="~3"
     }
 }
 
