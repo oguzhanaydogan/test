@@ -78,7 +78,7 @@ data "azurerm_role_definition" "acrpull" {
   name = "AcrPull"
 }
 
-resource "azurerm_role_assignment" "example" {
+resource "azurerm_role_assignment" "web1_role_assignment" {
   scope              = module.ACR.id
   role_definition_id = data.azurerm_role_definition.acrpull.id
   principal_id       = module.webapp1.identity[0].principal_id
@@ -103,7 +103,7 @@ module "webapp1" {
     }
 }
 
-resource "azurerm_role_assignment" "example" {
+resource "azurerm_role_assignment" "web2_role_assignment" {
   scope              = module.ACR.id
   # role_definition_id = data.azurerm_role_definition.acrpull.id
   principal_id       = module.webapp2.identity[0].principal_id
