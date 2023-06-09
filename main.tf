@@ -73,6 +73,16 @@ resource "azurerm_key_vault_access_policy" "kvaccess" {
     "Get", "List",
   ]
 }
+
+data "azurerm_role_definition" "acrpull" {
+  name = "AcrPull"
+}
+
+resource "azurerm_role_assignment" "example" {
+  scope              = module.ACR.id
+  role_definition_id = data.azurerm_role_definition.acrpull.id
+  principal_id       = module.webapp1.identity[0].principal_id
+}
 module "webapp1" {
   source = "./modules/webapp"
   name = "coywebapp1"
@@ -93,6 +103,12 @@ module "webapp1" {
     }
 }
 
+resource "azurerm_role_assignment" "example" {
+  scope              = module.ACR.id
+  # role_definition_id = data.azurerm_role_definition.acrpull.id
+  principal_id       = module.webapp2.identity[0].principal_id
+  role_definition_name = "AcrPull"
+}
 module "webapp2" {
   source = "./modules/webapp"
   name = "coywebapp2"
