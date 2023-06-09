@@ -20,7 +20,7 @@ provider "azurerm" {
 module "resourcegroup" {
   source = "./modules/ResourceGroup"
   location = "East US"
-  name = "DemoResourceGroup2"
+  name = "DemoResourceGroup"
 }
 ##VNET##
 module "virtualnetwork" {
@@ -114,7 +114,7 @@ resource "azurerm_service_plan" "example" {
 
 data "azurerm_key_vault" "example" {
   name                = "coykeyvault"
-  resource_group_name = "DemoResourceGroup"
+  resource_group_name = module.resourcegroup.name
 }
 data "azurerm_key_vault_secret" "db_password" {
   name         = "MYSQLPASSWORD"
