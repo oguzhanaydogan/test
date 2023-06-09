@@ -41,70 +41,6 @@ module "subnets" {
   delegation = each.value.delegation
 }
 
-# module "app_subnet" {
-#   source = "./modules/subnet"
-#   resource_group_name = module.resourcegroup.name
-#   virtual_network_name = module.virtualnetwork.name
-#   subnet_name = "app-subnet"
-#   address_prefixes = ["10.0.1.0/24"]
-#   delegation = true
-# }
-
-# module "key_vault_subnet" {
-#   source = "./modules/subnet"
-#   resource_group_name = module.resourcegroup.name
-#   virtual_network_name = module.virtualnetwork.name
-#   subnet_name = "key-vault-subnet"
-#   address_prefixes = ["10.0.2.0/24"]
-# }
-
-# module "default_subnet" {
-#   source = "./modules/subnet"
-#   resource_group_name = module.resourcegroup.name
-#   virtual_network_name = module.virtualnetwork.name
-#   subnet_name = "default"
-#   address_prefixes = ["10.0.0.0/24"]
-# }
-
-# module "acr_subnet" {
-#   source = "./modules/subnet"
-#   resource_group_name = module.resourcegroup.name
-#   virtual_network_name = module.virtualnetwork.name
-#   subnet_name = "acr"
-#   address_prefixes = ["10.0.3.0/24"]
-# }
-
-# module "appgateway_subnet" {
-#   source = "./modules/subnet"
-#   resource_group_name = module.resourcegroup.name
-#   virtual_network_name = module.virtualnetwork.name
-#   subnet_name = "appgateway"
-#   address_prefixes = ["10.0.4.0/24"]
-# }
-
-# module "app1endpoint_subnet" {
-#   source = "./modules/subnet"
-#   resource_group_name = module.resourcegroup.name
-#   virtual_network_name = module.virtualnetwork.name
-#   subnet_name = "app1endpoint"
-#   address_prefixes = ["10.0.5.0/26"]
-# }
-
-# module "app2endpoint_subnet" {
-#   source = "./modules/subnet"
-#   resource_group_name = module.resourcegroup.name
-#   virtual_network_name = module.virtualnetwork.name
-#   subnet_name = "app2endpoint"
-#   address_prefixes = ["10.0.5.64/26"]
-# }
-
-# module "mysql_endpoint_subnet" {
-#   source = "./modules/subnet"
-#   resource_group_name = module.resourcegroup.name
-#   virtual_network_name = module.virtualnetwork.name
-#   subnet_name = "mysql_endpoint"
-#   address_prefixes = ["10.0.6.0/24"]
-# }
 resource "azurerm_service_plan" "example" {
   name                = "oaydoganwebapp"
   resource_group_name = module.resourcegroup.name
@@ -348,8 +284,6 @@ resource "azurerm_network_security_group" "nsg1" {
 
 data "azurerm_subscription" "current" {}
 
-
-
 data "azurerm_role_definition" "acrpush" {
   name = "AcrPush"
 }
@@ -359,4 +293,6 @@ resource "azurerm_role_assignment" "example" {
   role_definition_id = "${data.azurerm_subscription.current.id}${data.azurerm_role_definition.acrpush.id}"
   principal_id       = azurerm_virtual_machine.vm1.identity[0].principal_id
 }
+
+
 
