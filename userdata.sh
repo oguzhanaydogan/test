@@ -11,3 +11,5 @@ systemctl start docker
 systemctl enable docker
 
 usermod -a -G docker acr-vm
+
+curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
