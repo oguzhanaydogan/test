@@ -4,10 +4,6 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "3.59.0"
     }
-    azuread = {
-      source = "hashicorp/azuread"
-      version = "2.39.0"
-    }
   }
   backend "azurerm" {
     resource_group_name  = "DefaultResourceGroup-EUS"
@@ -20,11 +16,7 @@ terraform {
 provider "azurerm" {
   features{}
 }
-
-provider "azuread" {
-}
 ##RG##
-
 module "resourcegroup" {
   source = "./modules/ResourceGroup"
   location = "East US"
@@ -41,68 +33,77 @@ module "virtualnetwork" {
 
 module "app_subnet" {
   source = "./modules/subnet"
+  for_each = var.subnets
   resource_group_name = module.resourcegroup.name
   virtual_network_name = module.virtualnetwork.name
-  subnet_name = "app"
-  address_prefixes = ["10.0.1.0/24"]
-  delegation = true
+  subnet_name = each.key
+  address_prefixes = each.value.address_prefixes
+  delegation = each.value.delegation
 }
+# module "app_subnet" {
+#   source = "./modules/subnet"
+#   resource_group_name = module.resourcegroup.name
+#   virtual_network_name = module.virtualnetwork.name
+#   subnet_name = "app-subnet"
+#   address_prefixes = ["10.0.1.0/24"]
+#   delegation = true
+# }
 
-module "key_vault_subnet" {
-  source = "./modules/subnet"
-  resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.virtualnetwork.name
-  subnet_name = "key-vault"
-  address_prefixes = ["10.0.2.0/24"]
-}
+# module "key_vault_subnet" {
+#   source = "./modules/subnet"
+#   resource_group_name = module.resourcegroup.name
+#   virtual_network_name = module.virtualnetwork.name
+#   subnet_name = "key-vault-subnet"
+#   address_prefixes = ["10.0.2.0/24"]
+# }
 
-module "default_subnet" {
-  source = "./modules/subnet"
-  resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.virtualnetwork.name
-  subnet_name = "default"
-  address_prefixes = ["10.0.0.0/24"]
-}
+# module "default_subnet" {
+#   source = "./modules/subnet"
+#   resource_group_name = module.resourcegroup.name
+#   virtual_network_name = module.virtualnetwork.name
+#   subnet_name = "default"
+#   address_prefixes = ["10.0.0.0/24"]
+# }
 
-module "acr_subnet" {
-  source = "./modules/subnet"
-  resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.virtualnetwork.name
-  subnet_name = "acr"
-  address_prefixes = ["10.0.3.0/24"]
-}
+# module "acr_subnet" {
+#   source = "./modules/subnet"
+#   resource_group_name = module.resourcegroup.name
+#   virtual_network_name = module.virtualnetwork.name
+#   subnet_name = "acr"
+#   address_prefixes = ["10.0.3.0/24"]
+# }
 
-module "appgateway_subnet" {
-  source = "./modules/subnet"
-  resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.virtualnetwork.name
-  subnet_name = "appgateway"
-  address_prefixes = ["10.0.4.0/24"]
-}
+# module "appgateway_subnet" {
+#   source = "./modules/subnet"
+#   resource_group_name = module.resourcegroup.name
+#   virtual_network_name = module.virtualnetwork.name
+#   subnet_name = "appgateway"
+#   address_prefixes = ["10.0.4.0/24"]
+# }
 
-module "app1endpoint_subnet" {
-  source = "./modules/subnet"
-  resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.virtualnetwork.name
-  subnet_name = "app1endpoint"
-  address_prefixes = ["10.0.5.0/26"]
-}
+# module "app1endpoint_subnet" {
+#   source = "./modules/subnet"
+#   resource_group_name = module.resourcegroup.name
+#   virtual_network_name = module.virtualnetwork.name
+#   subnet_name = "app1endpoint"
+#   address_prefixes = ["10.0.5.0/26"]
+# }
 
-module "app2endpoint_subnet" {
-  source = "./modules/subnet"
-  resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.virtualnetwork.name
-  subnet_name = "app2endpoint"
-  address_prefixes = ["10.0.5.64/26"]
-}
+# module "app2endpoint_subnet" {
+#   source = "./modules/subnet"
+#   resource_group_name = module.resourcegroup.name
+#   virtual_network_name = module.virtualnetwork.name
+#   subnet_name = "app2endpoint"
+#   address_prefixes = ["10.0.5.64/26"]
+# }
 
-module "mysql_endpoint_subnet" {
-  source = "./modules/subnet"
-  resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.virtualnetwork.name
-  subnet_name = "mysql_endpoint"
-  address_prefixes = ["10.0.6.0/24"]
-}
+# module "mysql_endpoint_subnet" {
+#   source = "./modules/subnet"
+#   resource_group_name = module.resourcegroup.name
+#   virtual_network_name = module.virtualnetwork.name
+#   subnet_name = "mysql_endpoint"
+#   address_prefixes = ["10.0.6.0/24"]
+# }
 resource "azurerm_service_plan" "example" {
   name                = "oaydoganwebapp"
   resource_group_name = module.resourcegroup.name
@@ -123,10 +124,6 @@ data "azurerm_key_vault_secret" "db_password" {
 
 data "azurerm_client_config" "current" {}
 
-# data "azuread_service_principal" "current" {
-#   display_name = "azure-cli-2023-06-08-16-04-04"
-# }
-
 resource "azurerm_key_vault_access_policy" "kvaccess" {
   key_vault_id = data.azurerm_key_vault.example.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
@@ -145,6 +142,7 @@ module "webapp1" {
   resource_group_name = module.resourcegroup.name
   location = module.resourcegroup.location
   service_plan_id = azurerm_service_plan.example.id
+  
   app_settings = {
     "MYSQLPASSWORD"=data.azurerm_key_vault_secret.db_password.value
     }
@@ -258,21 +256,6 @@ module "private_endpoint_mysql" {
   subresource_name = "mysqlServer"
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 resource "azurerm_virtual_machine" "vm1" {
   name                  = var.vm_name
   location              = module.resourcegroup.location
@@ -338,9 +321,6 @@ data "azurerm_ssh_public_key" "ssh_public_key" {
   name                = var.ssh_key_name
 }
 
-# data "template_file" "userdata" {
-#   template = file("${abspath(path.module)}/userdata.sh")
-# }
 
 resource "azurerm_network_interface_security_group_association" "nic1" {
   network_interface_id      = azurerm_network_interface.main.id
