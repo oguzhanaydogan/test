@@ -37,11 +37,11 @@ variable "subnets"  {
         delegation = false
         }  
     "app1endpoint_subnet" = {
-        address_prefixes = ["10.0.5.0/24"]
+        address_prefixes = ["10.0.5.0/26"]
         delegation = false
         } 
     "app2endpoint_subnet" = {
-        address_prefixes = ["10.0.5.0/24"]
+        address_prefixes = ["10.0.5.64/26"]
         delegation = false
         } 
     "mysql_endpoint_subnet" = {
