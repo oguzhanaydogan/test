@@ -17,3 +17,7 @@ output "database_name" {
 output "database_username" {
     value = azurerm_mysql_server.mysql.administrator_login
 }
+
+output "server_name" {
+  value = azurerm_mysql_server.mysql.name
+}
