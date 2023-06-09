@@ -82,6 +82,7 @@ module "webapp1" {
   
   app_settings = {
     "MYSQLPASSWORD"=data.azurerm_key_vault_secret.db_password.value
+    "APPINSIGHTS_INSTRUMENTATIONKEY"=azurerm_application_insights.insight.instrumentation_key
     }
 }
 
@@ -293,6 +294,14 @@ resource "azurerm_role_assignment" "example" {
   role_definition_id = "${data.azurerm_subscription.current.id}${data.azurerm_role_definition.acrpush.id}"
   principal_id       = azurerm_virtual_machine.vm1.identity[0].principal_id
 }
+
+resource "azurerm_application_insights" "insight" {
+  name                = "tf-test-appinsights"
+  location            = module.resourcegroup.location
+  resource_group_name = module.resourcegroup.name
+  application_type    = "web"
+}
+
 
 
 
