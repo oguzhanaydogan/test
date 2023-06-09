@@ -31,7 +31,7 @@ module "virtualnetwork" {
   address_space = ["10.0.0.0/16"]
 }
 
-module "app_subnet" {
+module "subnets" {
   source = "./modules/subnet"
   for_each = var.subnets
   resource_group_name = module.resourcegroup.name
@@ -161,12 +161,12 @@ module "webapp2" {
 
 resource "azurerm_app_service_virtual_network_swift_connection" "vnet_integration1" {
   app_service_id = module.webapp1.id
-  subnet_id      = module.app_subnet.id
+  subnet_id      = module.subnets["app-subnet"].id
 }
 
 resource "azurerm_app_service_virtual_network_swift_connection" "vnet_integration2" {
   app_service_id = module.webapp2.id
-  subnet_id      = module.app_subnet.id
+  subnet_id      = module.subnets["app-subnet"].id
 }
 
 module "ACR" {
@@ -188,7 +188,7 @@ module "private_endpoint_acr" {
     source = "./modules/privateendpoint"
     resourcegroup = module.resourcegroup.name
     location = module.resourcegroup.location
-    subnet_id = module.acr_subnet.id
+    subnet_id = module.subnets["acr_subnet"].id
     private_dns_zone_ids = ["${module.private_dns_zone_acr.id}"]
     attached_resource_name = module.ACR.name
     attached_resource_id = module.ACR.id
@@ -207,7 +207,7 @@ module "private_endpoint_app1" {
     source = "./modules/privateendpoint"
     resourcegroup = module.resourcegroup.name
     location = module.resourcegroup.location
-    subnet_id = module.app1endpoint_subnet.id
+    subnet_id = module.subnets["app1endpoint_subnet"].id
     private_dns_zone_ids = ["${module.private_dns_zone_apps.id}"]
     attached_resource_name = module.webapp1.name
     attached_resource_id = module.webapp1.id
@@ -218,7 +218,7 @@ module "private_endpoint_app2" {
     source = "./modules/privateendpoint"
     resourcegroup = module.resourcegroup.name
     location = module.resourcegroup.location
-    subnet_id = module.app2endpoint_subnet.id
+    subnet_id = module.subnets["app2endpoint_subnet"].id
     private_dns_zone_ids = ["${module.private_dns_zone_apps.id}"]
     attached_resource_name = module.webapp2.name
     attached_resource_id = module.webapp2.id
@@ -250,7 +250,7 @@ module "private_endpoint_mysql" {
   attached_resource_name = module.mysql.name
   resourcegroup = module.resourcegroup.name
   location = module.resourcegroup.location
-  subnet_id = module.mysql_endpoint_subnet.id
+  subnet_id = module.subnets["mysql_endpoint_subnet"].id
   attached_resource_id = module.mysql.id
   private_dns_zone_ids = ["${module.private_dns_zone_mysql.id}"]
   subresource_name = "mysqlServer"
@@ -309,7 +309,7 @@ resource "azurerm_network_interface" "main" {
 
   ip_configuration {
     name                          = "testconfiguration1"
-    subnet_id                     = module.acr_subnet.id
+    subnet_id                     = module.subnets["acr_subnet"].id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id = azurerm_public_ip.pip1.id
   }
