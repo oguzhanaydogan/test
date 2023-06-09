@@ -12,3 +12,9 @@ variable "service_plan_id" {
 variable "app_settings" {
     type = map(string)
 }
+
+variable "image_name" {
+}
+
+variable "image_tag" {
+}
