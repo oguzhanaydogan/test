@@ -81,7 +81,7 @@ data "azurerm_role_definition" "acrpull" {
 resource "azurerm_role_assignment" "web1_role_assignment" {
   scope              = module.ACR.id
   role_definition_id = data.azurerm_role_definition.acrpull.id
-  principal_id       = module.webapp1.identity[0].principal_id
+  principal_id       = module.webapp1.key_vault_reference_identity_id
 }
 module "webapp1" {
   source = "./modules/webapp"
@@ -106,7 +106,7 @@ module "webapp1" {
 resource "azurerm_role_assignment" "web2_role_assignment" {
   scope              = module.ACR.id
   # role_definition_id = data.azurerm_role_definition.acrpull.id
-  principal_id       = module.webapp2.identity[0].principal_id
+  principal_id       = module.webapp2.key_vault_reference_identity_id
   role_definition_name = "AcrPull"
 }
 module "webapp2" {
