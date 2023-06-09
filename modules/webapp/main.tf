@@ -9,6 +9,7 @@ resource "azurerm_linux_web_app" "webapp" {
     ignore_changes = [virtual_network_subnet_id]
   }
   site_config {
+    container_registry_use_managed_identity = true
     application_stack {
       docker_image = var.image_name
       docker_image_tag = var.image_tag
