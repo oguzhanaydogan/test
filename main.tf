@@ -205,7 +205,7 @@ module "mysql" {
 
 module "private_dns_zone_mysql" {
   source = "./modules/privatednszone"
-  name = "${module.mysql.server_name}.private.mysql.database.azure.com"
+  name = "privatelink.mysql.database.azure.com"
   resourcegroup = module.resourcegroup.name
   attached_resource_name = module.mysql.name
   virtual_network_id = module.virtualnetwork.id
