@@ -11,3 +11,7 @@ variable "virtual_network_name" {
 
 variable "delegation" {
 }
+
+variable "delegation_name" {
+    default = null
+}

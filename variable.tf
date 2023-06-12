@@ -19,6 +19,8 @@ variable "subnets"  {
     "app-subnet" = {
         address_prefixes = ["10.0.1.0/24"]
         delegation = true
+        delegation_name = "Microsoft.Web/serverFarms"
+        
         }
     "key-vault-subnet" = {
         address_prefixes = ["10.0.2.0/24"]
@@ -46,7 +48,9 @@ variable "subnets"  {
         } 
     "mysql_subnet" = {
         address_prefixes = ["10.0.6.0/24"]
-        delegation = false
+        delegation = true
+        delegation_name = "Microsoft.DBforMySQL/flexibleServers"
+
         }
     }
 }
