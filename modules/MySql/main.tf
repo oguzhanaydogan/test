@@ -1,4 +1,4 @@
-resource "azurerm_mysql_flexible_server" "example" {
+resource "azurerm_mysql_flexible_server" "mysql" {
   name                   = var.server_name
   resource_group_name    = var.resourcegroup
   location               = var.location
@@ -9,10 +9,10 @@ resource "azurerm_mysql_flexible_server" "example" {
   private_dns_zone_id    = var.private_dns_zone_id
 }
 
-resource "azurerm_mysql_flexible_database" "example" {
+resource "azurerm_mysql_flexible_database" "db" {
   name                = var.db_name
   resource_group_name = var.resourcegroup
-  server_name         = azurerm_mysql_flexible_server.example.name
+  server_name         = azurerm_mysql_flexible_server.mysql.name
   charset             = "utf8"
   collation           = "utf8_unicode_ci"
 }
