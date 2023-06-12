@@ -195,7 +195,7 @@ module "mysql" {
   location = module.resourcegroup.location
   resourcegroup = module.resourcegroup.name
   db_name = "phonebook"
-  admin_username = "coy-admin"
+  admin_username = "coyadmin"
   admin_password = data.azurerm_key_vault_secret.db_password.value
   delegated_subnet_id = module.subnets["mysql_subnet"].id
   private_dns_zone_id = module.private_dns_zone_mysql.id
