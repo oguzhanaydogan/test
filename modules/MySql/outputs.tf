@@ -19,5 +19,5 @@ output "database_username" {
 }
 
 output "server_name" {
-  value = azurerm_mysql_server.mysql.name
+  value = azurerm_mysql_flexible_server.mysql.name
 }
