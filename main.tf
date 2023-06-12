@@ -330,6 +330,7 @@ resource "azurerm_application_insights" "insight" {
   application_type    = "web"
 }
 
+#test
 # resource "azurerm_public_ip" "appgw_pip" {
 #   name                = "appgw-pip"
 #   resource_group_name = module.resourcegroup.name
