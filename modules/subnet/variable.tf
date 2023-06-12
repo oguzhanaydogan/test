@@ -14,4 +14,5 @@ variable "delegation" {
 
 variable "delegation_name" {
     default = null
+    nullable = true
 }
