@@ -93,7 +93,7 @@ module "webapp1" {
   image_tag = "latest"
   
   app_settings = {
-    "MYSQLPASSWORD"=data.azurerm_key_vault_secret.db_password.value
+    "MYSQL_PASSWORD"=data.azurerm_key_vault_secret.db_password.value
     "MYSQL_DATABASE_HOST"=module.mysql.host
     "MYSQL_DATABASE"=module.mysql.database_name
     "MYSQL_USER"="${module.mysql.database_username}@${module.mysql.host}"
@@ -105,7 +105,6 @@ module "webapp1" {
 
 resource "azurerm_role_assignment" "web2_role_assignment" {
   scope              = module.ACR.id
-  # role_definition_id = data.azurerm_role_definition.acrpull.id
   principal_id       = module.webapp2.key_vault_reference_identity_id
   role_definition_name = "AcrPull"
 }
@@ -115,10 +114,10 @@ module "webapp2" {
   resource_group_name = module.resourcegroup.name
   location = module.resourcegroup.location
   service_plan_id = azurerm_service_plan.example.id
-  image_name = "coyhub.azurecr.io/web-server"
+  image_name = "coyhub.azurecr.io/result-server"
   image_tag = "latest"
     app_settings = {
-    "MYSQLPASSWORD"=data.azurerm_key_vault_secret.db_password.value
+    "MYSQL_PASSWORD"=data.azurerm_key_vault_secret.db_password.value
     "MYSQL_DATABASE_HOST"=module.mysql.host
     "MYSQL_DATABASE"=module.mysql.database_name
     "MYSQL_USER"=module.mysql.database_username    
@@ -190,9 +189,6 @@ module "private_endpoint_app2" {
     attached_resource_id = module.webapp2.id
     subresource_name = "sites"
 }
-
-
-
 module "mysql" {
   source = "./modules/MySql"
   server_name = "coy-database-server"
@@ -201,6 +197,8 @@ module "mysql" {
   db_name = "phonebook"
   admin_username = "coy-admin"
   admin_password = data.azurerm_key_vault_secret.db_password.value
+  delegated_subnet_id = module.subnets["mysql_subnet"].id
+  private_dns_zone_id = module.private_dns_zone_mysql.id
 }
 
 module "private_dns_zone_mysql" {
@@ -210,18 +208,6 @@ module "private_dns_zone_mysql" {
   attached_resource_name = module.mysql.name
   virtual_network_id = module.virtualnetwork.id
 }
-
-module "private_endpoint_mysql" {
-  source = "./modules/privateendpoint"
-  attached_resource_name = module.mysql.name
-  resourcegroup = module.resourcegroup.name
-  location = module.resourcegroup.location
-  subnet_id = module.subnets["mysql_endpoint_subnet"].id
-  attached_resource_id = module.mysql.id
-  private_dns_zone_ids = ["${module.private_dns_zone_mysql.id}"]
-  subresource_name = "mysqlServer"
-  }
-
 resource "azurerm_virtual_machine" "vm1" {
   name                  = var.vm_name
   location              = module.resourcegroup.location

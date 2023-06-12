@@ -44,7 +44,7 @@ variable "subnets"  {
         address_prefixes = ["10.0.5.64/26"]
         delegation = false
         } 
-    "mysql_endpoint_subnet" = {
+    "mysql_subnet" = {
         address_prefixes = ["10.0.6.0/24"]
         delegation = false
         }
