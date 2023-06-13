@@ -313,6 +313,7 @@ resource "azurerm_public_ip" "appgw_pip" {
   resource_group_name = module.resourcegroup.name
   location            = module.resourcegroup.location
   allocation_method   = "Dynamic"
+  sku = "Standard"
 }
 
 resource "azurerm_application_gateway" "appgw" {
@@ -391,7 +392,7 @@ resource "azurerm_application_gateway" "appgw" {
   }  
 
   ###app2###
-      backend_address_pool {
+  backend_address_pool {
     name = "app2-backend-pool"
     fqdns = [module.webapp2.fqdn]
   }
