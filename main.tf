@@ -355,6 +355,7 @@ resource "azurerm_application_gateway" "appgw" {
     request_timeout       = 60
     probe_name            = "apps-probe"
     pick_host_name_from_backend_address = true
+    path = "/"
   }
   probe {
     name                = "apps-probe"
@@ -379,6 +380,7 @@ resource "azurerm_application_gateway" "appgw" {
     request_timeout       = 60
     probe_name            = "app1-probe"
     pick_host_name_from_backend_address = true
+    path = "/"
   }
   probe {
     name                = "app1-probe"
@@ -388,7 +390,7 @@ resource "azurerm_application_gateway" "appgw" {
     unhealthy_threshold = 3
     protocol            = "Http"
     port                = 80
-    path                = "/web"
+    path                = "/"
   }  
 
   ###app2###
@@ -404,6 +406,7 @@ resource "azurerm_application_gateway" "appgw" {
     request_timeout       = 60
     probe_name            = "app2-probe"
     pick_host_name_from_backend_address = true
+    path = "/"
   }
   probe {
     name                = "app2-probe"
@@ -413,7 +416,7 @@ resource "azurerm_application_gateway" "appgw" {
     unhealthy_threshold = 3
     protocol            = "Http"
     port                = 80
-    path                = "/result"
+    path                = "/"
   } 
 
   http_listener {
