@@ -199,16 +199,16 @@ module "mysql" {
   admin_username = "coyadmin"
   admin_password = data.azurerm_key_vault_secret.db_password.value
   delegated_subnet_id = module.subnets["mysql_subnet"].id
-  # private_dns_zone_id = module.private_dns_zone_mysql.id
+  private_dns_zone_id = module.private_dns_zone_mysql.id
   depends_on = [ azurerm_private_dns_zone_virtual_network_link.test ]
 }
 
-resource "azurerm_private_dns_zone_virtual_network_link" "test" {
-    name                  = "acctestVnetZonetest03.com"
-    resource_group_name   = module.resourcegroup.name
-    private_dns_zone_name = module.private_dns_zone_mysql.name
-    virtual_network_id    = module.virtualnetwork.id
-}
+# resource "azurerm_private_dns_zone_virtual_network_link" "test" {
+#     name                  = "acctestVnetZonetest03.com"
+#     resource_group_name   = module.resourcegroup.name
+#     private_dns_zone_name = module.private_dns_zone_mysql.name
+#     virtual_network_id    = module.virtualnetwork.id
+# }
 
 module "private_dns_zone_mysql" {
   source = "./modules/privatednszone"
