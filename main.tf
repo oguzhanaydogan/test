@@ -321,7 +321,7 @@ resource "azurerm_application_gateway" "appgw" {
   location            = module.resourcegroup.location
 
   sku {
-    name     = "Standard"
+    name     = "Standard_v2"
     tier     = "Standard_v2"
     capacity = 2
   }
