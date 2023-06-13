@@ -328,7 +328,7 @@ resource "azurerm_application_gateway" "appgw" {
 
   gateway_ip_configuration {
     name      = "my-gateway-ip-configuration"
-    subnet_id = module.subnets["appgateway_subnet"]
+    subnet_id = module.subnets["appgateway_subnet"].id
   }
 
   frontend_port {
