@@ -429,6 +429,7 @@ resource "azurerm_application_gateway" "appgw" {
     backend_address_pool_name  = "apps-backend-pool"
     backend_http_settings_name = "apps-http-settings"    
     url_path_map_name = "path-map1"
+    priority = "110"
   }
 
   url_path_map{
