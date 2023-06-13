@@ -17,3 +17,10 @@ resource "azurerm_mysql_flexible_database" "db" {
   charset             = "utf8"
   collation           = "utf8_unicode_ci"
 }
+
+resource "azurerm_mysql_flexible_server_configuration" "require-secure-transport" {
+  name                = "require_secure_transport"
+  resource_group_name = var.resourcegroup
+  server_name         = azurerm_mysql_flexible_server.mysql.name
+  value               = "OFF"
+}
