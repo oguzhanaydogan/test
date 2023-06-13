@@ -308,135 +308,144 @@ resource "azurerm_application_insights" "insight" {
   application_type    = "web"
 }
 
-# resource "azurerm_public_ip" "appgw_pip" {
-#   name                = "PublicFrontendIpIPv4"
-#   resource_group_name = module.resourcegroup.name
-#   location            = module.resourcegroup.location
-#   allocation_method   = "Dynamic"
-# }
+resource "azurerm_public_ip" "appgw_pip" {
+  name                = "PublicFrontendIpIPv4"
+  resource_group_name = module.resourcegroup.name
+  location            = module.resourcegroup.location
+  allocation_method   = "Dynamic"
+}
 
-# # since these variables are re-used - a locals block makes this more maintainable
-# locals {
-#   backend_address_pool_name      = "${azurerm_virtual_network.example.name}-beap"
-#   frontend_port_name             = "${azurerm_virtual_network.example.name}-feport"
-#   frontend_ip_configuration_name = "${azurerm_virtual_network.example.name}-feip"
-#   http_setting_name              = "${azurerm_virtual_network.example.name}-be-htst"
-#   listener_name                  = "${azurerm_virtual_network.example.name}-httplstn"
-#   request_routing_rule_name      = "${azurerm_virtual_network.example.name}-rqrt"
-#   redirect_configuration_name    = "${azurerm_virtual_network.example.name}-rdrcfg"
-# }
+resource "azurerm_application_gateway" "appgw" {
+  name                = "coy-appgateway"
+  resource_group_name = module.resourcegroup.name
+  location            = module.resourcegroup.location
 
-# resource "azurerm_application_gateway" "appgw" {
-#   name                = "coy-appgateway"
-#   resource_group_name = module.resourcegroup.name
-#   location            = module.resourcegroup.location
+  sku {
+    name     = "Standard_Small"
+    tier     = "Standard"
+    capacity = 2
+  }
 
-#   sku {
-#     name     = "Standard_Small"
-#     tier     = "Standard"
-#     capacity = 2
-#   }
+  gateway_ip_configuration {
+    name      = "my-gateway-ip-configuration"
+    subnet_id = module.subnets["appgateway_subnet"]
+  }
 
-#   gateway_ip_configuration {
-#     name      = "my-gateway-ip-configuration"
-#     subnet_id = module.subnets["appgateway_subnet"]
-#   }
+  frontend_port {
+    name = "feport"
+    port = 80
+  }
 
-#   frontend_port {
-#     name = "feport"
-#     port = 80
-#   }
+  frontend_ip_configuration {
+    name                 = "frontend-ip"
+    public_ip_address_id = azurerm_public_ip.appgw_pip.id
+  }
 
-#   frontend_ip_configuration {
-#     name                 = "frontend-ip"
-#     public_ip_address_id = azurerm_public_ip.appgw_pip.id
-#   }
+  backend_address_pool {
+    name = "backend-apps"
+  }
+  ###APPS
+  backend_http_settings {
+    name                  = "apps-http-settings"
+    cookie_based_affinity = "Disabled"
+    port                  = 80
+    protocol              = "Http"
+    request_timeout       = 60
+    probe_name            = "apps-probe"
+    pick_host_name_from_backend_address = true
+  }
+  probe {
+    name                = "apps-probe"
+    pick_host_name_from_backend_http_settings = true
+    interval            = 30
+    timeout             = 30
+    unhealthy_threshold = 3
+    protocol            = "Http"
+    port                = 80
+    path                = "/"
+  }
+  ##app1##
+    backend_address_pool {
+    name = "app1-backend-pool"
+  }
+  backend_http_settings {
+    name                  = "app1-http-settings"
+    cookie_based_affinity = "Disabled"
+    port                  = 80
+    protocol              = "Http"
+    request_timeout       = 60
+    probe_name            = "app1-probe"
+    pick_host_name_from_backend_address = true
+  }
+  probe {
+    name                = "app1-probe"
+    pick_host_name_from_backend_http_settings = true
+    interval            = 30
+    timeout             = 30
+    unhealthy_threshold = 3
+    protocol            = "Http"
+    port                = 80
+    path                = "/web"
+  }  
 
-#   backend_address_pool {
-#     name = "backend-apps"
-#   }
-#   ###APPS
-#   backend_http_settings {
-#     name                  = "apps-http-settings"
-#     cookie_based_affinity = "Disabled"
-#     port                  = 80
-#     protocol              = "Http"
-#     request_timeout       = 60
-#     probe_name            = "apps-probe"
-#     pick_host_name_from_backend_address = true
-#   }
-#   probe {
-#     name                = "apps-probe"
-#     pick_host_name_from_backend_http_settings = true
-#     interval            = 30
-#     timeout             = 30
-#     unhealthy_threshold = 3
-#     protocol            = "Http"
-#     port                = 80
-#     path                = "/"
-#   }
-#   ##app1##
-#     backend_address_pool {
-#     name = "app1-backend-pool"
-#   }
-#   backend_http_settings {
-#     name                  = "app1-http-settings"
-#     cookie_based_affinity = "Disabled"
-#     port                  = 80
-#     protocol              = "Http"
-#     request_timeout       = 60
-#     probe_name            = "app1-probe"
-#     pick_host_name_from_backend_address = true
-#   }
-#   probe {
-#     name                = "app1-probe"
-#     pick_host_name_from_backend_http_settings = true
-#     interval            = 30
-#     timeout             = 30
-#     unhealthy_threshold = 3
-#     protocol            = "Http"
-#     port                = 80
-#     path                = "/web"
-#   }  
+  ###app2###
+      backend_address_pool {
+    name = "app2-backend-pool"
+  }
+  backend_http_settings {
+    name                  = "app2-http-settings"
+    cookie_based_affinity = "Disabled"
+    port                  = 80
+    protocol              = "Http"
+    request_timeout       = 60
+    probe_name            = "app2-probe"
+    pick_host_name_from_backend_address = true
+  }
+  probe {
+    name                = "app2-probe"
+    pick_host_name_from_backend_http_settings = true
+    interval            = 30
+    timeout             = 30
+    unhealthy_threshold = 3
+    protocol            = "Http"
+    port                = 80
+    path                = "/result"
+  } 
 
-#   ###app2###
-#       backend_address_pool {
-#     name = "app2-backend-pool"
-#   }
-#   backend_http_settings {
-#     name                  = "app2-http-settings"
-#     cookie_based_affinity = "Disabled"
-#     port                  = 80
-#     protocol              = "Http"
-#     request_timeout       = 60
-#     probe_name            = "app2-probe"
-#     pick_host_name_from_backend_address = true
-#   }
-#   probe {
-#     name                = "app2-probe"
-#     pick_host_name_from_backend_http_settings = true
-#     interval            = 30
-#     timeout             = 30
-#     unhealthy_threshold = 3
-#     protocol            = "Http"
-#     port                = 80
-#     path                = "/result"
-#   } 
+  http_listener {
+    name                           = "listener"
+    frontend_ip_configuration_name = "frontend-ip"
+    frontend_port_name             = "feport"
+    protocol                       = "Http"
+  }
 
-#   http_listener {
-#     name                           = "listener"
-#     frontend_ip_configuration_name = "frontend-ip"
-#     frontend_port_name             = "feport"
-#     protocol                       = "Http"
-#   }
+  request_routing_rule {
+    name                       = "rule"
+    rule_type                  = "PathBasedRouting"
+    http_listener_name         = "listener"
+    backend_address_pool_name  = "apps-backend-pool"
+    backend_http_settings_name = "apps-http-settings"    
+  }
 
-#   request_routing_rule {
-#     name                       = "rule"
-#     rule_type                  = "PathBasedRouting"
-#     http_listener_name         = "listener"
-#     backend_address_pool_name  = "apps-backend-pool"
-#     backend_http_settings_name = "apps-http-settings"
-#   }
-# }
+  url_path_map{
+    name = "path-map1"
+    # default_backend_http_settings_name =
+    # default_backend_address_pool_name  =
+    path_rule{
+      name = "path1"
+      paths = "/web"
+      backend_address_pool_name = "app1-backend-pool"
+      backend_http_settings_name = "app1-http-settings"
+    }
+    path_rule{
+      name = "path2"
+      paths = "/result"
+      backend_address_pool_name = "app2-backend-pool"
+      backend_http_settings_name = "app2-http-settings"
+    }
+  }
+
+  
+}
 
 
