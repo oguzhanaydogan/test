@@ -97,7 +97,7 @@ module "webapp1" {
     "MYSQL_PASSWORD"=data.azurerm_key_vault_secret.db_password.value
     "MYSQL_DATABASE_HOST"=module.mysql.host
     "MYSQL_DATABASE"=module.mysql.database_name
-    "MYSQL_USER"="${module.mysql.database_username}@${module.mysql.host}"
+    "MYSQL_USER"=module.mysql.database_name
     "APPINSIGHTS_INSTRUMENTATIONKEY"=azurerm_application_insights.insight.instrumentation_key
     "APPLICATIONINSIGHTS_CONNECTION_STRING"=azurerm_application_insights.insight.connection_string
     "ApplicationInsightsAgent_EXTENSION_VERSION"="~3"
@@ -201,15 +201,7 @@ module "mysql" {
   delegated_subnet_id = module.subnets["mysql_subnet"].id
   private_dns_zone_id = module.private_dns_zone_mysql.id
   zone = "1"
-  # depends_on = [ azurerm_private_dns_zone_virtual_network_link.test ]
 }
-
-# resource "azurerm_private_dns_zone_virtual_network_link" "test" {
-#     name                  = "acctestVnetZonetest03.com"
-#     resource_group_name   = module.resourcegroup.name
-#     private_dns_zone_name = module.private_dns_zone_mysql.name
-#     virtual_network_id    = module.virtualnetwork.id
-# }
 
 module "private_dns_zone_mysql" {
   source = "./modules/privatednszone"
@@ -326,78 +318,77 @@ resource "azurerm_application_insights" "insight" {
   application_type    = "web"
 }
 
-#test
-# resource "azurerm_public_ip" "appgw_pip" {
-#   name                = "appgw-pip"
-#   resource_group_name = module.resourcegroup.name
-#   location            = module.resourcegroup.location
-#   allocation_method   = "Dynamic"
-# }
+resource "azurerm_public_ip" "appgw_pip" {
+  name                = "appgw-pip"
+  resource_group_name = module.resourcegroup.name
+  location            = module.resourcegroup.location
+  allocation_method   = "Dynamic"
+}
 
-# # since these variables are re-used - a locals block makes this more maintainable
-# locals {
-#   backend_address_pool_name      = "${azurerm_virtual_network.example.name}-beap"
-#   frontend_port_name             = "${azurerm_virtual_network.example.name}-feport"
-#   frontend_ip_configuration_name = "${azurerm_virtual_network.example.name}-feip"
-#   http_setting_name              = "${azurerm_virtual_network.example.name}-be-htst"
-#   listener_name                  = "${azurerm_virtual_network.example.name}-httplstn"
-#   request_routing_rule_name      = "${azurerm_virtual_network.example.name}-rqrt"
-#   redirect_configuration_name    = "${azurerm_virtual_network.example.name}-rdrcfg"
-# }
+# since these variables are re-used - a locals block makes this more maintainable
+locals {
+  backend_address_pool_name      = "${azurerm_virtual_network.example.name}-beap"
+  frontend_port_name             = "${azurerm_virtual_network.example.name}-feport"
+  frontend_ip_configuration_name = "${azurerm_virtual_network.example.name}-feip"
+  http_setting_name              = "${azurerm_virtual_network.example.name}-be-htst"
+  listener_name                  = "${azurerm_virtual_network.example.name}-httplstn"
+  request_routing_rule_name      = "${azurerm_virtual_network.example.name}-rqrt"
+  redirect_configuration_name    = "${azurerm_virtual_network.example.name}-rdrcfg"
+}
 
-# resource "azurerm_application_gateway" "appgw" {
-#   name                = "coy-appgateway"
-#   resource_group_name = module.resourcegroup.name
-#   location            = module.resourcegroup.location
+resource "azurerm_application_gateway" "appgw" {
+  name                = "coy-appgateway"
+  resource_group_name = module.resourcegroup.name
+  location            = module.resourcegroup.location
 
-#   sku {
-#     name     = "Standard_Small"
-#     tier     = "Standard"
-#     capacity = 2
-#   }
+  sku {
+    name     = "Standard_Small"
+    tier     = "Standard"
+    capacity = 2
+  }
 
-#   gateway_ip_configuration {
-#     name      = "my-gateway-ip-configuration"
-#     subnet_id = module.subnets["appgateway_subnet"]
-#   }
+  gateway_ip_configuration {
+    name      = "my-gateway-ip-configuration"
+    subnet_id = module.subnets["appgateway_subnet"]
+  }
 
-#   frontend_port {
-#     name = local.frontend_port_name
-#     port = 443
-#   }
+  frontend_port {
+    name = local.frontend_port_name
+    port = 443
+  }
 
-#   frontend_ip_configuration {
-#     name                 = local.frontend_ip_configuration_name
-#     public_ip_address_id = azurerm_public_ip.appgw_pip.id
-#   }
+  frontend_ip_configuration {
+    name                 = local.frontend_ip_configuration_name
+    public_ip_address_id = azurerm_public_ip.appgw_pip.id
+  }
 
-#   backend_address_pool {
-#     name = local.backend_address_pool_name
-#   }
+  backend_address_pool {
+    name = local.backend_address_pool_name
+  }
 
-#   backend_http_settings {
-#     name                  = local.http_setting_name
-#     cookie_based_affinity = "Disabled"
-#     path                  = "/"
-#     port                  = 443
-#     protocol              = "Https"
-#     request_timeout       = 60
-#   }
+  backend_http_settings {
+    name                  = local.http_setting_name
+    cookie_based_affinity = "Disabled"
+    path                  = "/"
+    port                  = 443
+    protocol              = "Https"
+    request_timeout       = 60
+  }
 
-#   http_listener {
-#     name                           = local.listener_name
-#     frontend_ip_configuration_name = local.frontend_ip_configuration_name
-#     frontend_port_name             = local.frontend_port_name
-#     protocol                       = "Https"
-#   }
+  http_listener {
+    name                           = local.listener_name
+    frontend_ip_configuration_name = local.frontend_ip_configuration_name
+    frontend_port_name             = local.frontend_port_name
+    protocol                       = "Https"
+  }
 
-#   request_routing_rule {
-#     name                       = local.request_routing_rule_name
-#     rule_type                  = "Basic"
-#     http_listener_name         = local.listener_name
-#     backend_address_pool_name  = local.backend_address_pool_name
-#     backend_http_settings_name = local.http_setting_name
-#   }
-# }
+  request_routing_rule {
+    name                       = local.request_routing_rule_name
+    rule_type                  = "Basic"
+    http_listener_name         = local.listener_name
+    backend_address_pool_name  = local.backend_address_pool_name
+    backend_http_settings_name = local.http_setting_name
+  }
+}
 
 
