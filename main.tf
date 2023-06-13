@@ -312,7 +312,7 @@ resource "azurerm_public_ip" "appgw_pip" {
   name                = "PublicFrontendIpIPv4"
   resource_group_name = module.resourcegroup.name
   location            = module.resourcegroup.location
-  allocation_method   = "Dynamic"
+  allocation_method   = "Static"
   sku = "Standard"
 }
 
