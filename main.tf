@@ -75,14 +75,10 @@ resource "azurerm_key_vault_access_policy" "kvaccess" {
   ]
 }
 
-data "azurerm_role_definition" "acrpull" {
-  name = "AcrPull"
-}
-
 resource "azurerm_role_assignment" "web1_role_assignment" {
   scope              = module.ACR.id
-  role_definition_id = data.azurerm_role_definition.acrpull.id
   principal_id       = module.webapp1.key_vault_reference_identity_id
+  role_definition_name = "AcrPull"
 }
 module "webapp1" {
   source = "./modules/webapp"
@@ -299,16 +295,10 @@ resource "azurerm_network_security_group" "nsg1" {
     }
 }
 
-data "azurerm_subscription" "current" {}
-
-data "azurerm_role_definition" "acrpush" {
-  name = "AcrPush"
-}
-
 resource "azurerm_role_assignment" "example" {
-  scope              = module.ACR.id
-  role_definition_id = data.azurerm_role_definition.acrpush.id
-  principal_id       = azurerm_virtual_machine.vm1.identity[0].principal_id
+  scope                = module.ACR.id
+  role_definition_name = "AcrPush"
+  principal_id         = azurerm_virtual_machine.vm1.identity[0].principal_id
 }
 
 resource "azurerm_application_insights" "insight" {
@@ -319,7 +309,7 @@ resource "azurerm_application_insights" "insight" {
 }
 
 # resource "azurerm_public_ip" "appgw_pip" {
-#   name                = "appgw-pip"
+#   name                = "PublicFrontendIpIPv4"
 #   resource_group_name = module.resourcegroup.name
 #   location            = module.resourcegroup.location
 #   allocation_method   = "Dynamic"
@@ -353,41 +343,99 @@ resource "azurerm_application_insights" "insight" {
 #   }
 
 #   frontend_port {
-#     name = local.frontend_port_name
-#     port = 443
+#     name = "feport"
+#     port = 80
 #   }
 
 #   frontend_ip_configuration {
-#     name                 = local.frontend_ip_configuration_name
+#     name                 = "frontend-ip"
 #     public_ip_address_id = azurerm_public_ip.appgw_pip.id
 #   }
 
 #   backend_address_pool {
-#     name = local.backend_address_pool_name
+#     name = "backend-apps"
 #   }
-
+#   ###APPS
 #   backend_http_settings {
-#     name                  = local.http_setting_name
+#     name                  = "apps-http-settings"
 #     cookie_based_affinity = "Disabled"
-#     path                  = "/"
-#     port                  = 443
-#     protocol              = "Https"
+#     port                  = 80
+#     protocol              = "Http"
 #     request_timeout       = 60
+#     probe_name            = "apps-probe"
+#     pick_host_name_from_backend_address = true
 #   }
+#   probe {
+#     name                = "apps-probe"
+#     pick_host_name_from_backend_http_settings = true
+#     interval            = 30
+#     timeout             = 30
+#     unhealthy_threshold = 3
+#     protocol            = "Http"
+#     port                = 80
+#     path                = "/"
+#   }
+#   ##app1##
+#     backend_address_pool {
+#     name = "app1-backend-pool"
+#   }
+#   backend_http_settings {
+#     name                  = "app1-http-settings"
+#     cookie_based_affinity = "Disabled"
+#     port                  = 80
+#     protocol              = "Http"
+#     request_timeout       = 60
+#     probe_name            = "app1-probe"
+#     pick_host_name_from_backend_address = true
+#   }
+#   probe {
+#     name                = "app1-probe"
+#     pick_host_name_from_backend_http_settings = true
+#     interval            = 30
+#     timeout             = 30
+#     unhealthy_threshold = 3
+#     protocol            = "Http"
+#     port                = 80
+#     path                = "/web"
+#   }  
+
+#   ###app2###
+#       backend_address_pool {
+#     name = "app2-backend-pool"
+#   }
+#   backend_http_settings {
+#     name                  = "app2-http-settings"
+#     cookie_based_affinity = "Disabled"
+#     port                  = 80
+#     protocol              = "Http"
+#     request_timeout       = 60
+#     probe_name            = "app2-probe"
+#     pick_host_name_from_backend_address = true
+#   }
+#   probe {
+#     name                = "app2-probe"
+#     pick_host_name_from_backend_http_settings = true
+#     interval            = 30
+#     timeout             = 30
+#     unhealthy_threshold = 3
+#     protocol            = "Http"
+#     port                = 80
+#     path                = "/result"
+#   } 
 
 #   http_listener {
-#     name                           = local.listener_name
-#     frontend_ip_configuration_name = local.frontend_ip_configuration_name
-#     frontend_port_name             = local.frontend_port_name
-#     protocol                       = "Https"
+#     name                           = "listener"
+#     frontend_ip_configuration_name = "frontend-ip"
+#     frontend_port_name             = "feport"
+#     protocol                       = "Http"
 #   }
 
 #   request_routing_rule {
-#     name                       = local.request_routing_rule_name
-#     rule_type                  = "Basic"
-#     http_listener_name         = local.listener_name
-#     backend_address_pool_name  = local.backend_address_pool_name
-#     backend_http_settings_name = local.http_setting_name
+#     name                       = "rule"
+#     rule_type                  = "PathBasedRouting"
+#     http_listener_name         = "listener"
+#     backend_address_pool_name  = "apps-backend-pool"
+#     backend_http_settings_name = "apps-http-settings"
 #   }
 # }
 
