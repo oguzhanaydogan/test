@@ -433,13 +433,13 @@ resource "azurerm_application_gateway" "appgw" {
     # default_backend_address_pool_name  =
     path_rule{
       name = "path1"
-      paths = "/web"
+      paths = ["/web"]
       backend_address_pool_name = "app1-backend-pool"
       backend_http_settings_name = "app1-http-settings"
     }
     path_rule{
       name = "path2"
-      paths = "/result"
+      paths = ["/result"]
       backend_address_pool_name = "app2-backend-pool"
       backend_http_settings_name = "app2-http-settings"
     }
