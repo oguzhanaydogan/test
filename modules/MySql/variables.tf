@@ -21,3 +21,6 @@ variable "delegated_subnet_id" {
 
 variable "private_dns_zone_id" {
 }
+
+variable "zone" {
+}

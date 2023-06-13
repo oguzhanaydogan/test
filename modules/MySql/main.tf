@@ -7,6 +7,7 @@ resource "azurerm_mysql_flexible_server" "mysql" {
   sku_name               = "B_Standard_B1s"
   delegated_subnet_id    = var.delegated_subnet_id
   private_dns_zone_id    = var.private_dns_zone_id
+  zone = var.zone
 }
 
 resource "azurerm_mysql_flexible_database" "db" {
