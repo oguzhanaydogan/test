@@ -429,8 +429,8 @@ resource "azurerm_application_gateway" "appgw" {
 
   url_path_map{
     name = "path-map1"
-    # default_backend_http_settings_name =
-    # default_backend_address_pool_name  =
+    default_backend_http_settings_name = "apps-http-settings"
+    default_backend_address_pool_name  = "apps-backend-pool"
     path_rule{
       name = "path1"
       paths = ["/web"]
