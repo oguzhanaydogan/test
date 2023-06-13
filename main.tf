@@ -425,6 +425,7 @@ resource "azurerm_application_gateway" "appgw" {
     http_listener_name         = "listener"
     backend_address_pool_name  = "apps-backend-pool"
     backend_http_settings_name = "apps-http-settings"    
+    url_path_map_name = "path-map1"
   }
 
   url_path_map{
