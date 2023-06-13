@@ -342,7 +342,8 @@ resource "azurerm_application_gateway" "appgw" {
   }
 
   backend_address_pool {
-    name = "backend-apps"
+    name = "apps-backend-pool"
+    fqdns = [module.webapp1.fqdn, module.webapp2.fqdn]
   }
   ###APPS
   backend_http_settings {
@@ -367,6 +368,7 @@ resource "azurerm_application_gateway" "appgw" {
   ##app1##
     backend_address_pool {
     name = "app1-backend-pool"
+    fqdns = [module.webapp1.fqdn]
   }
   backend_http_settings {
     name                  = "app1-http-settings"
@@ -391,6 +393,7 @@ resource "azurerm_application_gateway" "appgw" {
   ###app2###
       backend_address_pool {
     name = "app2-backend-pool"
+    fqdns = [module.webapp2.fqdn]
   }
   backend_http_settings {
     name                  = "app2-http-settings"
