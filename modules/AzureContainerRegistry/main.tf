@@ -5,4 +5,6 @@ resource "azurerm_container_registry" "acr" {
   admin_enabled                 = false
   sku                           = "Premium"
   public_network_access_enabled = false
+  network_rule_bypass_option    = "None"
 }
+

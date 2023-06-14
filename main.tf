@@ -97,6 +97,7 @@ module "webapp1" {
     "APPINSIGHTS_INSTRUMENTATIONKEY"=azurerm_application_insights.insight.instrumentation_key
     "APPLICATIONINSIGHTS_CONNECTION_STRING"=azurerm_application_insights.insight.connection_string
     "ApplicationInsightsAgent_EXTENSION_VERSION"="~3"
+    "DOCKER_REGISTRY_SERVER_URL"=module.ACR.fqdn
     }
 }
 
@@ -117,7 +118,8 @@ module "webapp2" {
     "MYSQL_PASSWORD"=data.azurerm_key_vault_secret.db_password.value
     "MYSQL_DATABASE_HOST"=module.mysql.host
     "MYSQL_DATABASE"=module.mysql.database_name
-    "MYSQL_USER"=module.mysql.database_username    
+    "MYSQL_USER"=module.mysql.database_username  
+    "DOCKER_REGISTRY_SERVER_URL"=module.ACR.fqdn  
     }
   }
 
