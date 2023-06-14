@@ -203,7 +203,7 @@ module "private_dns_zone_mysql" {
   source = "./modules/privatednszone"
   name = "privatelink.mysql.database.azure.com"
   resourcegroup = module.resourcegroup.name
-  attached_resource_name = module.mysql.name
+  attached_resource_name = "coy-database-server"
   virtual_network_id = module.virtualnetwork.id
 }
 resource "azurerm_virtual_machine" "vm1" {
