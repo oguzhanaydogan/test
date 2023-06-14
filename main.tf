@@ -44,7 +44,7 @@ module "subnetacr" {
   resource_group_name = module.resourcegroup.name
   virtual_network_name = module.virtualnetwork2.name
   subnet_name = "acr-subnet"
-  address_prefixes = "10.1.0.0/24"
+  address_prefixes = ["10.1.0.0/24"]
   delegation = false
   delegation_name = ""
 }
