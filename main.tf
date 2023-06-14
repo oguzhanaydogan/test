@@ -197,6 +197,7 @@ module "mysql" {
   delegated_subnet_id = module.subnets["mysql_subnet"].id
   private_dns_zone_id = module.private_dns_zone_mysql.id
   zone = "1"
+  depends_on = [ module.module.private_dns_zone_mysql ]
 }
 
 module "private_dns_zone_mysql" {
