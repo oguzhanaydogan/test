@@ -289,6 +289,7 @@ resource "azurerm_network_interface" "main" {
   }
 }
 
+#test
 
 data "azurerm_ssh_public_key" "ssh_public_key" {
   resource_group_name = var.ssh_key_rg
