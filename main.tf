@@ -453,8 +453,6 @@ resource "azurerm_application_gateway" "appgw" {
       backend_http_settings_name = "app2-http-settings"
     }
   }
-
-  
 }
 
 
