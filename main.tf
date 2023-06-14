@@ -31,6 +31,27 @@ module "virtualnetwork" {
   address_space = ["10.0.0.0/16"]
 }
 
+module "virtualnetwork2" {
+  source = "./modules/VirtualNetwork"
+  name = "acr-network"
+  location = module.resourcegroup.location
+  resource_group_name = module.resourcegroup.name
+  address_space = ["10.1.0.0/16"]
+}
+
+module "subnetacr" {
+  source = "./modules/subnet"
+  resource_group_name = module.resourcegroup.name
+  virtual_network_name = module.virtualnetwork2.name
+  subnet_name = "acr-subnet"
+  address_prefixes = "10.1.0.0/24"
+  delegation = false
+  delegation_name = ""
+}
+
+
+
+
 module "subnets" {
   source = "./modules/subnet"
   for_each = var.subnets
@@ -144,7 +165,7 @@ module "private_dns_zone_acr" {
   source = "./modules/privatednszone"
   name = "privatelink.azurecr.io"
   resourcegroup = module.resourcegroup.name
-  virtual_network_id = module.virtualnetwork.id
+  virtual_network_id = module.virtualnetwork2.id
   attached_resource_name = module.ACR.name
 }
 
@@ -152,7 +173,7 @@ module "private_endpoint_acr" {
     source = "./modules/privateendpoint"
     resourcegroup = module.resourcegroup.name
     location = module.resourcegroup.location
-    subnet_id = module.subnets["acr_subnet"].id
+    subnet_id = module.subnetacr.id
     private_dns_zone_ids = ["${module.private_dns_zone_acr.id}"]
     attached_resource_name = module.ACR.name
     attached_resource_id = module.ACR.id
@@ -262,7 +283,7 @@ resource "azurerm_network_interface" "main" {
 
   ip_configuration {
     name                          = "testconfiguration1"
-    subnet_id                     = module.subnets["acr_subnet"].id
+    subnet_id                     = module.subnetacr.id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id = azurerm_public_ip.pip1.id
   }
