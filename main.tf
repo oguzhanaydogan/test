@@ -49,9 +49,6 @@ module "subnetacr" {
   delegation_name = ""
 }
 
-
-
-
 module "subnets" {
   source = "./modules/subnet"
   for_each = var.subnets

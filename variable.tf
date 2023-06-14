@@ -31,11 +31,11 @@ variable "subnets"  {
         delegation = false
         delegation_name = ""
         }
-    "acr_subnet" = {
-        address_prefixes = ["10.0.3.0/24"]
-        delegation = false
-        delegation_name = ""
-        }
+    # "acr_subnet" = {
+    #     address_prefixes = ["10.0.3.0/24"]
+    #     delegation = false
+    #     delegation_name = ""
+    #     }
     "appgateway_subnet" = {
         address_prefixes = ["10.0.4.0/24"]
         delegation = false
