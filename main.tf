@@ -169,7 +169,7 @@ module "private_dns_zone_acr" {
 module "private_dns_zone_acr_link_example" {
   source = "./modules/privatednszoneextralink"
   resourcegroup = module.resourcegroup.name
-  name = "private_dns_zone_acr_link_example"
+  name = "private-dns-zone-acr-link-example"
   virtual_network_id = module.virtualnetwork.id
   private_dns_zone_name = module.private_dns_zone_acr.name
 }
@@ -182,7 +182,7 @@ data "azurerm_virtual_network" "virtualnetworkhub" {
 module "private_dns_zone_acr_link_hub" {
   source = "./modules/privatednszoneextralink"
   resourcegroup = module.resourcegroup.name
-  name = "private_dns_zone_acr_link_hub"
+  name = "private-dns-zone-acr-link-hub"
   virtual_network_id = data.azurerm_virtual_network.virtualnetworkhub.id
   private_dns_zone_name = module.private_dns_zone_acr.name
 }
