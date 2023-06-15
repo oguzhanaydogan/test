@@ -166,7 +166,7 @@ module "private_dns_zone_acr" {
   attached_resource_name = module.ACR.name
 }
 
-module "private_dns_zone_acr_link_hub" {
+module "private_dns_zone_acr_link_example" {
   source = "./modules/privatednszonelink"
   resourcegroup = module.resourcegroup.name
   attached_resource_name = module.ACR.name
