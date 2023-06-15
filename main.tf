@@ -12,7 +12,7 @@ terraform {
     key                  = "terraform.tfstate"
   }
 }
-
+#test
 provider "azurerm" {
   features{}
 }
