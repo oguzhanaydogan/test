@@ -159,7 +159,7 @@ module "ACR" {
 }
 
 module "private_dns_zone_acr" {
-  source = "./modules/privatednszone"
+  source = "./modules/privatednszonewithlink"
   name = "privatelink.azurecr.io"
   resourcegroup = module.resourcegroup.name
   virtual_network_id = module.virtualnetwork2.id
@@ -167,7 +167,7 @@ module "private_dns_zone_acr" {
 }
 
 module "private_dns_zone_acr_link_example" {
-  source = "./modules/privatednszonelink"
+  source = "./modules/privatednszoneextralink"
   resourcegroup = module.resourcegroup.name
   attached_resource_name = module.ACR.name
   virtual_network_id = module.virtualnetwork.id
@@ -180,7 +180,7 @@ data "azurerm_virtual_network" "virtualnetworkhub" {
 }
 
 module "private_dns_zone_acr_link_hub" {
-  source = "./modules/privatednszonelink"
+  source = "./modules/privatednszoneextralink"
   resourcegroup = module.resourcegroup.name
   attached_resource_name = module.ACR.name
   virtual_network_id = data.azurerm_virtual_network.virtualnetworkhub.id
@@ -201,7 +201,7 @@ module "private_endpoint_acr" {
 
 
 module "private_dns_zone_apps" {
-  source = "./modules/privatednszone"
+  source = "./modules/privatednszonewithlink"
   name = "privatelink.azurewebsites.net"
   resourcegroup = module.resourcegroup.name
   virtual_network_id = module.virtualnetwork.id
@@ -244,7 +244,7 @@ module "mysql" {
 }
 
 module "private_dns_zone_mysql" {
-  source = "./modules/privatednszone"
+  source = "./modules/privatednszonewithlink"
   name = "privatelink.mysql.database.azure.com"
   resourcegroup = module.resourcegroup.name
   attached_resource_name = "coy-database-server"
