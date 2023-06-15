@@ -156,6 +156,7 @@ module "ACR" {
   name = "coyhub"
   resource_group_name = module.resourcegroup.name
   location = module.resourcegroup.location
+  allowed_IPs = module.webapp1.outbound_ips
 }
 
 module "private_dns_zone_acr" {

@@ -15,6 +15,6 @@ output "fqdn" {
 }
 
 output "outbound_ips" {
-    value = azurerm_linux_web_app.webapp.outbound_ip_address_list
+    value = azurerm_linux_web_app.webapp.outbound_ip_addresses
 }
 
