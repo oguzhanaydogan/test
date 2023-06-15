@@ -156,7 +156,6 @@ module "ACR" {
   name = "coyhub"
   resource_group_name = module.resourcegroup.name
   location = module.resourcegroup.location
-  allowed_IPs = module.webapp1.outbound_ips
 }
 
 module "private_dns_zone_acr" {
@@ -165,6 +164,27 @@ module "private_dns_zone_acr" {
   resourcegroup = module.resourcegroup.name
   virtual_network_id = module.virtualnetwork2.id
   attached_resource_name = module.ACR.name
+}
+
+module "private_dns_zone_acr_link_hub" {
+  source = "./modules/privatednszonelink"
+  resourcegroup = module.resourcegroup.name
+  attached_resource_name = module.ACR.name
+  virtual_network_id = module.virtualnetwork.id
+  private_dns_zone_name = module.private_dns_zone_acr.name
+}
+
+data "azurerm_virtual_network" "virtualnetworkhub" {
+  name                = "hubvnet"
+  resource_group_name = module.resourcegroup.name
+}
+
+module "private_dns_zone_acr_link_hub" {
+  source = "./modules/privatednszonelink"
+  resourcegroup = module.resourcegroup.name
+  attached_resource_name = module.ACR.name
+  virtual_network_id = data.azurerm_virtual_network.virtualnetworkhub.id
+  private_dns_zone_name = module.private_dns_zone_acr.name
 }
 
 module "private_endpoint_acr" {
@@ -177,6 +197,8 @@ module "private_endpoint_acr" {
     attached_resource_id = module.ACR.id
     subresource_name = "registry"
 }
+
+
 
 module "private_dns_zone_apps" {
   source = "./modules/privatednszone"

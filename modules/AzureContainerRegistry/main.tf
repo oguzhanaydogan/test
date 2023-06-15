@@ -6,10 +6,4 @@ resource "azurerm_container_registry" "acr" {
   sku                           = "Premium"
   public_network_access_enabled = false
   network_rule_bypass_option    = "None"
-  network_rule_set = {
-    ip_rule = {
-      action = "Allow"
-      ip_range = var.allowed_IPs
-    }
-  }
 }
