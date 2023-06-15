@@ -1,7 +1,7 @@
 variable "resourcegroup" {
 }
 
-variable "attached_resource_name" {
+variable "name" {
 }
 
 variable "virtual_network_id" {
