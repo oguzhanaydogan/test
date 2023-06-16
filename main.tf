@@ -381,7 +381,7 @@ module "mysql" {
   depends_on = [ module.private_dns_zone_mysql ]
 }
 
-module "private_dns_zone_mysql" {
+module "private_dns_zone_mysql_flex" {
   source = "./modules/privatednszonewithlink"
   name = "privatelink.mysql.database.azure.com"
   resourcegroup = module.resourcegroup.name
