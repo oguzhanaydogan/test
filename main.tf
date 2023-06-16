@@ -39,6 +39,16 @@ module "virtualnetwork2" {
   address_space = ["10.1.0.0/16"]
 }
 
+module "hub_virtual_network" {
+  source = "./modules/VirtualNetwork"
+  name = "hubvnet"
+  location = module.resourcegroup.location
+  resource_group_name = module.resourcegroup.name
+  address_space = ["10.2.0.0/16"]
+}
+
+
+
 module "subnetacr" {
   source = "./modules/subnet"
   resource_group_name = module.resourcegroup.name
@@ -150,7 +160,6 @@ resource "azurerm_app_service_virtual_network_swift_connection" "vnet_integratio
   app_service_id = module.webapp2.id
   subnet_id      = module.subnets["app-subnet"].id
 }
-
 module "ACR" {
   source = "./modules/AzureContainerRegistry"
   name = "coyhub"
@@ -173,17 +182,11 @@ module "private_dns_zone_acr_link_example" {
   virtual_network_id = module.virtualnetwork.id
   private_dns_zone_name = module.private_dns_zone_acr.name
 }
-
-data "azurerm_virtual_network" "virtualnetworkhub" {
-  name                = "hubvnet"
-  resource_group_name = module.resourcegroup.name
-}
-
 module "private_dns_zone_acr_link_hub" {
   source = "./modules/privatednszoneextralink"
   resourcegroup = module.resourcegroup.name
   name = "private-dns-zone-acr-link-hub"
-  virtual_network_id = data.azurerm_virtual_network.virtualnetworkhub.id
+  virtual_network_id = module.hub_virtual_network.id
   private_dns_zone_name = module.private_dns_zone_acr.name
 }
 
