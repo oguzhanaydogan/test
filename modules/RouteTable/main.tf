@@ -5,10 +5,12 @@ resource "azurerm_route_table" "routetable" {
 
   dynamic "route" {
     for_each = var.route
-    name                   = each.key
-    address_prefix         = each.value.address_prefix
-    next_hop_type          = each.value.next_hop_type
-    next_hop_in_ip_address = each.value.next_hop_in_ip_address
+    content {
+        name                   = each.key
+        address_prefix         = each.value.address_prefix
+        next_hop_type          = each.value.next_hop_type
+        next_hop_in_ip_address = each.value.next_hop_in_ip_address   
+    }
   }
 }
 
