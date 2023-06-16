@@ -153,10 +153,10 @@ resource "azurerm_firewall_network_rule_collection" "example" {
     for_each = var.network_firewall_rules
     content {
         name = each.key
-        source_addresses = each.value.source_addresses
-        destination_ports = each.value.destination_ports
-        destination_addresses = each.value.destination_addresses
-        protocols = each.value.protocols
+        source_addresses = rule.value.source_addresses
+        destination_ports = rule.value.destination_ports
+        destination_addresses = rule.value.destination_addresses
+        protocols = rule.value.protocols
     }    
   }
 }
