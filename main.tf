@@ -51,7 +51,7 @@ module "hub_virtual_network" {
 module "hub_default" {
   source = "./modules/subnet"
   resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.virtualnetwork2.name
+  virtual_network_name = module.hub_virtual_network.name
   subnet_name = "default"
   address_prefixes = ["10.3.0.0/24"]
   delegation = false
@@ -61,7 +61,7 @@ module "hub_default" {
 module "firewall_subnet" {
   source = "./modules/subnet"
   resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.virtualnetwork2.name
+  virtual_network_name = module.hub_virtual_network.name
   subnet_name = "AzureFirewallSubnet"
   address_prefixes = ["10.3.1.0/26"]
   delegation = false
