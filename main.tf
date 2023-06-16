@@ -152,7 +152,7 @@ resource "azurerm_firewall_network_rule_collection" "example" {
    dynamic "rule" {
     for_each = var.network_firewall_rules
     content {
-        name = each.key
+        name = rule.key
         source_addresses = rule.value.source_addresses
         destination_ports = rule.value.destination_ports
         destination_addresses = rule.value.destination_addresses
