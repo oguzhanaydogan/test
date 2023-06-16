@@ -39,23 +39,23 @@ module "virtualnetwork2" {
   address_space = ["10.1.0.0/16"]
 }
 
-module "hub_virtual_network" {
-  source = "./modules/VirtualNetwork"
-  name = "hubvnet"
-  location = module.resourcegroup.location
-  resource_group_name = module.resourcegroup.name
-  address_space = ["10.2.0.0/16"]
-}
+# module "hub_virtual_network" {
+#   source = "./modules/VirtualNetwork"
+#   name = "hubvnet"
+#   location = module.resourcegroup.location
+#   resource_group_name = module.resourcegroup.name
+#   address_space = ["10.2.0.0/16"]
+# }
 
-module "hub_default" {
-  source = "./modules/subnet"
-  resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.virtualnetwork2.name
-  subnet_name = "default"
-  address_prefixes = ["10.2.0.0/24"]
-  delegation = false
-  delegation_name = ""
-}
+# module "hub_default" {
+#   source = "./modules/subnet"
+#   resource_group_name = module.resourcegroup.name
+#   virtual_network_name = module.virtualnetwork2.name
+#   subnet_name = "default"
+#   address_prefixes = ["10.2.0.0/24"]
+#   delegation = false
+#   delegation_name = ""
+# }
 
 # module "firewall_subnet" {
 #   source = "./modules/subnet"
