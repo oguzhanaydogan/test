@@ -46,6 +46,7 @@ module "hub_virtual_network" {
   resource_group_name = module.resourcegroup.name
   address_space = ["10.2.0.0/16"]
 }
+#test
 
 # module "hub_default" {
 #   source = "./modules/subnet"
