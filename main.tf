@@ -91,7 +91,7 @@ module "subnets" {
 }
 
 module "vnet_peering_example_hub" {
-  source = "./vnetpeering"
+  source = "./modules/vnetpeering"
   name = "example-hub"
   resource_group_name = module.resourcegroup.name
   virtual_network_name = module.virtualnetwork.name
@@ -99,7 +99,7 @@ module "vnet_peering_example_hub" {
 }
 
 module "vnet_peering_hub_example" {
-  source = "./vnetpeering"
+  source = "./modules/vnetpeering"
   name = "hub-example"
   resource_group_name = module.resourcegroup.name
   virtual_network_name = module.hub_virtual_network.name
@@ -107,7 +107,7 @@ module "vnet_peering_hub_example" {
 }
 
 module "vnet_peering_acr_hub" {
-  source = "./vnetpeering"
+  source = "./modules/vnetpeering"
   name = "acr-hub"
   resource_group_name = module.resourcegroup.name
   virtual_network_name = module.virtualnetwork2.name
@@ -115,11 +115,50 @@ module "vnet_peering_acr_hub" {
 }
 
 module "vnet_peering_hub_acr" {
-  source = "./vnetpeering"
+  source = "./modules/vnetpeering"
   name = "hub-acr"
   resource_group_name = module.resourcegroup.name
   virtual_network_name = module.hub_virtual_network.name
   remote_virtual_network_id = module.virtualnetwork2.id
+}
+
+resource "azurerm_firewall" "hub_wall" {
+  name                = "testfirewall"
+  location            = module.resourcegroup.location
+  resource_group_name = module.resourcegroup.name
+  sku_name            = "AZFW_VNet"
+  sku_tier            = "Premium"
+
+  ip_configuration {
+    name                 = "configuration"
+    subnet_id            = module.firewall_subnet.id
+    public_ip_address_id = azurerm_public_ip.example.id
+  }
+}
+
+resource "azurerm_firewall_policy" "example" {
+  name                = "hub-policy"
+  resource_group_name = module.resourcegroup.name
+  location            = module.resourcegroup.location
+}
+
+resource "azurerm_firewall_network_rule_collection" "example" {
+  name                = "testcollection"
+  azure_firewall_name = azurerm_firewall.hub_wall.name
+  resource_group_name = module.resourcegroup.name
+  priority            = 100
+  action              = "Allow"
+
+   dynamic "rule" {
+    for_each = var.network_firewall_rules
+    content {
+        name = each.key
+        source_addresses = each.value.source_addresses
+        destination_ports = each.value.destination_ports
+        destination_addresses = each.value.destination_addresses
+        protocols = each.value.protocols
+    }    
+  }
 }
 
 resource "azurerm_service_plan" "example" {
@@ -252,8 +291,6 @@ module "private_endpoint_acr" {
     attached_resource_id = module.ACR.id
     subresource_name = "registry"
 }
-
-
 
 module "private_dns_zone_apps" {
   source = "./modules/privatednszonewithlink"

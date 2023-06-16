@@ -59,3 +59,14 @@ variable "subnets"  {
         }
     }
 }
+
+variable "network_firewall_rules" {
+    default = {
+        "acr-webapp-rule" = {
+            source_addresses = ["10.0.1.0/24"]
+            destination_ports = ["*"]
+            destination_addresses = ["10.1.0.0/24"]
+            protocols = ["Any"]
+    }
+  }
+}
