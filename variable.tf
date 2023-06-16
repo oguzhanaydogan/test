@@ -70,3 +70,13 @@ variable "network_firewall_rules" {
     }
   }
 }
+
+variable "route" {
+    default = {
+        "webapp-acr-allow" = {
+            address_prefix = "10.1.0.0/24"
+            next_hop_type = "VirtualAppliance"
+            next_hop_in_ip_address = "10.2.1.4"
+        }
+    }
+}

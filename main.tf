@@ -122,6 +122,15 @@ module "vnet_peering_hub_acr" {
   remote_virtual_network_id = module.virtualnetwork2.id
 }
 
+module "routetable_webapptoacr" {
+  source = "./modules/RouteTable"
+  name = "webapp-acr-allow"
+  resource_group_name = module.resourcegroup.name
+  location = module.resourcegroup.location
+  route = var.route
+  subnet_id = module.firewall_subnet.id
+}
+
 resource "azurerm_firewall" "hub_wall" {
   name                = "testfirewall"
   location            = module.resourcegroup.location
