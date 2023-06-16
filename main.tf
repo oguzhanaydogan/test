@@ -39,13 +39,13 @@ module "virtualnetwork2" {
   address_space = ["10.1.0.0/16"]
 }
 
-# module "hub_virtual_network" {
-#   source = "./modules/VirtualNetwork"
-#   name = "hubvnet"
-#   location = module.resourcegroup.location
-#   resource_group_name = module.resourcegroup.name
-#   address_space = ["10.2.0.0/16"]
-# }
+module "hub_virtual_network" {
+  source = "./modules/VirtualNetwork"
+  name = "hubvnet"
+  location = module.resourcegroup.location
+  resource_group_name = module.resourcegroup.name
+  address_space = ["10.2.0.0/16"]
+}
 
 # module "hub_default" {
 #   source = "./modules/subnet"
