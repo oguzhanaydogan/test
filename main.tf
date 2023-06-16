@@ -132,6 +132,7 @@ resource "azurerm_firewall" "hub_wall" {
   ip_configuration {
     name                 = "configuration"
     subnet_id            = module.firewall_subnet.id
+    public_ip_address_id = 
   }
 }
 
