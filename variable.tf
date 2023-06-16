@@ -51,12 +51,6 @@ variable "subnets"  {
         delegation = false
         delegation_name = ""
         } 
-    "mysql_subnet" = {
-        address_prefixes = ["10.0.6.0/24"]
-        delegation = true
-        delegation_name = "Microsoft.DBforMySQL/flexibleServers"
-
-        }
     }
 }
 
@@ -66,6 +60,12 @@ variable "network_firewall_rules" {
             source_addresses = ["10.0.1.0/24"]
             destination_ports = ["*"]
             destination_addresses = ["10.1.0.0/24"]
+            protocols = ["Any"]
+    }
+        "db-webapp-rule" = {
+            source_addresses = ["10.0.1.0/24"]
+            destination_ports = ["*"]
+            destination_addresses = ["10.2.1.0/26"]
             protocols = ["Any"]
     }
   }
@@ -78,9 +78,10 @@ variable "route" {
             next_hop_type = "VirtualAppliance"
             next_hop_in_ip_address = "10.3.1.4"
         }
-        # "internet" = {
-        #     address_prefix = "0.0.0.0/0"
-        #     next_hop_type = "Internet"
-        # }
+        "webapp-db-allow" = {
+            address_prefix = "10.2.1.0/26"
+            next_hop_type = "VirtualAppliance"
+            next_hop_in_ip_address = "10.3.1.4"
+        }
     }
 }

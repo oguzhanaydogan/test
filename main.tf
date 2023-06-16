@@ -22,7 +22,7 @@ module "resourcegroup" {
   location = "East US"
   name = "DemoResourceGroup"
 }
-##VNET##
+####example-network
 module "virtualnetwork" {
   source = "./modules/VirtualNetwork"
   name = "example-network"
@@ -31,6 +31,18 @@ module "virtualnetwork" {
   address_space = ["10.0.0.0/16"]
 }
 
+module "subnets" {
+  source = "./modules/subnet"
+  for_each = var.subnets
+  resource_group_name = module.resourcegroup.name
+  virtual_network_name = module.virtualnetwork.name
+  subnet_name = each.key
+  address_prefixes = each.value.address_prefixes
+  delegation = each.value.delegation
+  delegation_name = each.value.delegation_name
+}
+
+##### acr-network
 module "virtualnetwork2" {
   source = "./modules/VirtualNetwork"
   name = "acr-network"
@@ -39,6 +51,17 @@ module "virtualnetwork2" {
   address_space = ["10.1.0.0/16"]
 }
 
+module "subnetacr" {
+  source = "./modules/subnet"
+  resource_group_name = module.resourcegroup.name
+  virtual_network_name = module.virtualnetwork2.name
+  subnet_name = "acr-subnet"
+  address_prefixes = ["10.1.0.0/24"]
+  delegation = false
+  delegation_name = ""
+}
+
+#### hub-network
 module "hub_virtual_network" {
   source = "./modules/VirtualNetwork"
   name = "hub-network"
@@ -46,7 +69,6 @@ module "hub_virtual_network" {
   resource_group_name = module.resourcegroup.name
   address_space = ["10.3.0.0/16"]
 }
-
 
 module "hub_default" {
   source = "./modules/subnet"
@@ -68,26 +90,39 @@ module "firewall_subnet" {
   delegation_name = ""
 }
 
-
-module "subnetacr" {
-  source = "./modules/subnet"
+#### db-network
+module "db_network" {
+  source = "./modules/VirtualNetwork"
+  name = "db-network"
+  location = module.resourcegroup.location
   resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.virtualnetwork2.name
-  subnet_name = "acr-subnet"
-  address_prefixes = ["10.1.0.0/24"]
-  delegation = false
-  delegation_name = ""
+  address_space = ["10.2.0.0/16"]
 }
 
-module "subnets" {
+module "db_subnet" {
   source = "./modules/subnet"
-  for_each = var.subnets
   resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.virtualnetwork.name
-  subnet_name = each.key
-  address_prefixes = each.value.address_prefixes
-  delegation = each.value.delegation
-  delegation_name = each.value.delegation_name
+  virtual_network_name = module.db_network.name
+  subnet_name = "mysql-subnet"
+  address_prefixes = ["10.2.1.0/26"]
+  delegation = true
+  delegation_name = "Microsoft.DBforMySQL/flexibleServers"
+}
+
+module "vnet_peering_db_hub" {
+  source = "./modules/vnetpeering"
+  name = "db-hub"
+  resource_group_name = module.resourcegroup.name
+  virtual_network_name = module.db_network.name
+  remote_virtual_network_id = module.hub_virtual_network.id
+}
+
+module "vnet_peering_hub_db" {
+  source = "./modules/vnetpeering"
+  name = "hub-db"
+  resource_group_name = module.resourcegroup.name
+  virtual_network_name = module.hub_virtual_network.name
+  remote_virtual_network_id = module.db_network.id
 }
 
 module "vnet_peering_example_hub" {
@@ -143,12 +178,6 @@ resource "azurerm_firewall" "hub_wall" {
     subnet_id            = module.firewall_subnet.id
     public_ip_address_id = azurerm_public_ip.hubwall_pip.id
   }
-}
-
-resource "azurerm_firewall_policy" "example" {
-  name                = "hub-policy"
-  resource_group_name = module.resourcegroup.name
-  location            = module.resourcegroup.location
 }
 
 resource "azurerm_firewall_network_rule_collection" "example" {
@@ -289,6 +318,7 @@ module "private_dns_zone_acr_link_example" {
   virtual_network_id = module.virtualnetwork.id
   private_dns_zone_name = module.private_dns_zone_acr.name
 }
+
 module "private_dns_zone_acr_link_hub" {
   source = "./modules/privatednszoneextralink"
   resourcegroup = module.resourcegroup.name
@@ -345,7 +375,7 @@ module "mysql" {
   db_name = "phonebook"
   admin_username = "coyadmin"
   admin_password = data.azurerm_key_vault_secret.db_password.value
-  delegated_subnet_id = module.subnets["mysql_subnet"].id
+  delegated_subnet_id = module.db_subnet.id
   private_dns_zone_id = module.private_dns_zone_mysql.id
   zone = "1"
   depends_on = [ module.private_dns_zone_mysql ]
@@ -356,8 +386,25 @@ module "private_dns_zone_mysql" {
   name = "privatelink.mysql.database.azure.com"
   resourcegroup = module.resourcegroup.name
   attached_resource_name = "coy-database-server"
-  virtual_network_id = module.virtualnetwork.id
+  virtual_network_id = module.db_network.id
 }
+
+module "private_dns_zone_mysql_link_example" {
+  source = "./modules/privatednszoneextralink"
+  resourcegroup = module.resourcegroup.name
+  name = "private-dns-zone-mysql-link-example"
+  virtual_network_id = module.virtualnetwork.id
+  private_dns_zone_name = module.private_dns_zone_mysql.name
+}
+
+module "private_dns_zone_db_link_hub" {
+  source = "./modules/privatednszoneextralink"
+  resourcegroup = module.resourcegroup.name
+  name = "private-dns-zone-mysql-link-hub"
+  virtual_network_id = module.hub_virtual_network.id
+  private_dns_zone_name = module.private_dns_zone_mysql.name
+}
+
 resource "azurerm_virtual_machine" "vm1" {
   name                  = var.vm_name
   location              = module.resourcegroup.location
