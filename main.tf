@@ -41,33 +41,32 @@ module "virtualnetwork2" {
 
 module "hub_virtual_network" {
   source = "./modules/VirtualNetwork"
-  name = "hubvnet"
+  name = "hub-network"
   location = module.resourcegroup.location
   resource_group_name = module.resourcegroup.name
-  address_space = ["10.2.0.0/16"]
+  address_space = ["10.3.0.0/16"]
 }
-#test
 
-# module "hub_default" {
-#   source = "./modules/subnet"
-#   resource_group_name = module.resourcegroup.name
-#   virtual_network_name = module.virtualnetwork2.name
-#   subnet_name = "default"
-#   address_prefixes = ["10.2.0.0/24"]
-#   delegation = false
-#   delegation_name = ""
-# }
 
-# module "firewall_subnet" {
-#   source = "./modules/subnet"
-#   resource_group_name = module.resourcegroup.name
-#   virtual_network_name = module.virtualnetwork2.name
-#   subnet_name = "AzureFirewallSubnet"
-#   address_prefixes = ["10.2.1.0/26"]
-#   delegation = false
-#   delegation_name = ""
-# }
+module "hub_default" {
+  source = "./modules/subnet"
+  resource_group_name = module.resourcegroup.name
+  virtual_network_name = module.virtualnetwork2.name
+  subnet_name = "default"
+  address_prefixes = ["10.3.0.0/24"]
+  delegation = false
+  delegation_name = ""
+}
 
+module "firewall_subnet" {
+  source = "./modules/subnet"
+  resource_group_name = module.resourcegroup.name
+  virtual_network_name = module.virtualnetwork2.name
+  subnet_name = "AzureFirewallSubnet"
+  address_prefixes = ["10.3.1.0/26"]
+  delegation = false
+  delegation_name = ""
+}
 
 
 module "subnetacr" {
@@ -89,6 +88,38 @@ module "subnets" {
   address_prefixes = each.value.address_prefixes
   delegation = each.value.delegation
   delegation_name = each.value.delegation_name
+}
+
+module "vnet_peering_example_hub" {
+  source = "./vnetpeering"
+  name = "example-hub"
+  resource_group_name = module.resourcegroup.name
+  virtual_network_name = module.virtualnetwork.name
+  remote_virtual_network_id = module.hub_virtual_network.id
+}
+
+module "vnet_peering_hub_example" {
+  source = "./vnetpeering"
+  name = "hub-example"
+  resource_group_name = module.resourcegroup.name
+  virtual_network_name = module.hub_virtual_network.name
+  remote_virtual_network_id = module.virtualnetwork.id
+}
+
+module "vnet_peering_acr_hub" {
+  source = "./vnetpeering"
+  name = "acr-hub"
+  resource_group_name = module.resourcegroup.name
+  virtual_network_name = module.virtualnetwork2.name
+  remote_virtual_network_id = module.hub_virtual_network.id
+}
+
+module "vnet_peering_hub_example" {
+  source = "./vnetpeering"
+  name = "hub-acr"
+  resource_group_name = module.resourcegroup.name
+  virtual_network_name = module.hub_virtual_network.name
+  remote_virtual_network_id = module.virtualnetwork2.id
 }
 
 resource "azurerm_service_plan" "example" {
