@@ -114,7 +114,7 @@ module "vnet_peering_acr_hub" {
   remote_virtual_network_id = module.hub_virtual_network.id
 }
 
-module "vnet_peering_hub_example" {
+module "vnet_peering_hub_acr" {
   source = "./vnetpeering"
   name = "hub-acr"
   resource_group_name = module.resourcegroup.name
