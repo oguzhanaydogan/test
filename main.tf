@@ -132,7 +132,7 @@ resource "azurerm_firewall" "hub_wall" {
   ip_configuration {
     name                 = "configuration"
     subnet_id            = module.firewall_subnet.id
-    public_ip_address_id = 
+    public_ip_address_id = azurerm_public_ip.hubwall_pip.id
   }
 }
 
@@ -159,6 +159,13 @@ resource "azurerm_firewall_network_rule_collection" "example" {
         protocols = each.value.protocols
     }    
   }
+}
+resource "azurerm_public_ip" "hubwall_pip" {
+  name                = "hubwallpip"
+  location            = module.resourcegroup.location
+  resource_group_name = module.resourcegroup.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
 }
 
 resource "azurerm_service_plan" "example" {
