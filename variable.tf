@@ -78,9 +78,9 @@ variable "route" {
             next_hop_type = "VirtualAppliance"
             next_hop_in_ip_address = "10.2.1.4"
         }
-        "internet" = {
-            address_prefix = "0.0.0.0/0"
-            next_hop_type = "Internet"
-        }
+        # "internet" = {
+        #     address_prefix = "0.0.0.0/0"
+        #     next_hop_type = "Internet"
+        # }
     }
 }

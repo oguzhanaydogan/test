@@ -128,7 +128,7 @@ module "routetable_webapptoacr" {
   resource_group_name = module.resourcegroup.name
   location = module.resourcegroup.location
   route = var.route
-  subnet_id = module.firewall_subnet.id
+  subnet_id = module.subnets["app-subnet"].id
 }
 
 resource "azurerm_firewall" "hub_wall" {
