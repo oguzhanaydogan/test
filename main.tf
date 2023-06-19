@@ -216,8 +216,9 @@ resource "azurerm_service_plan" "example" {
 
 data "azurerm_key_vault" "example" {
   name                = "coy-vault"
-  resource_group_name = "backend-rg
+  resource_group_name = "backend-rg"
 }
+
 data "azurerm_key_vault_secret" "db_password" {
   name         = "MYSQLPASSWORD"
   key_vault_id = data.azurerm_key_vault.example.id
