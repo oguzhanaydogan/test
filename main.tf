@@ -218,6 +218,7 @@ data "azurerm_key_vault" "example" {
   name                = "coykeyvault2"
   resource_group_name = "ssh"
 }
+
 data "azurerm_key_vault_secret" "db_password" {
   name         = "MYSQLPASSWORD"
   key_vault_id = data.azurerm_key_vault.example.id
