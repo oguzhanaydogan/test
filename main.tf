@@ -6,8 +6,8 @@ terraform {
     }
   }
   backend "azurerm" {
-    resource_group_name  = "backend-rg"
-    storage_account_name = "coystorage"
+    resource_group_name  = "DefaultResourceGroup-EUS"
+    storage_account_name = "ccseyhan2"
     container_name       = "terraformstate"
     key                  = "terraform.tfstate"
   }
@@ -215,8 +215,8 @@ resource "azurerm_service_plan" "example" {
 }
 
 data "azurerm_key_vault" "example" {
-  name                = "coy-vault"
-  resource_group_name = "backend-rg"
+  name                = "coykeyvault"
+  resource_group_name = module.resourcegroup.name
 }
 
 data "azurerm_key_vault_secret" "db_password" {
