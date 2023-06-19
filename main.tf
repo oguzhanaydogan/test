@@ -166,6 +166,16 @@ module "routetable_webapptoacr" {
   subnet_id = module.subnets["app-subnet"].id
 }
 
+resource "azurerm_subnet_route_table_association" "example" {
+  subnet_id      = module.subnetacr.id
+  route_table_id = module.routetable_webapptoacr.id
+}
+
+resource "azurerm_subnet_route_table_association" "db_association" {
+  subnet_id      = module.db_subnet.id
+  route_table_id = module.routetable_webapptoacr.id
+}
+
 resource "azurerm_firewall" "hub_wall" {
   name                = "testfirewall"
   location            = module.resourcegroup.location
