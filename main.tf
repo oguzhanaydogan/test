@@ -6,8 +6,8 @@ terraform {
     }
   }
   backend "azurerm" {
-    resource_group_name  = "DefaultResourceGroup-EUS"
-    storage_account_name = "ccseyhan2"
+    resource_group_name  = "backend-rg"
+    storage_account_name = "coystorage"
     container_name       = "terraformstate"
     key                  = "terraform.tfstate"
   }
@@ -264,6 +264,8 @@ module "webapp1" {
     "DOCKER_REGISTRY_SERVER_URL"=module.ACR.fqdn
     }
 }
+
+
 
 resource "azurerm_role_assignment" "web2_role_assignment" {
   scope              = module.ACR.id
