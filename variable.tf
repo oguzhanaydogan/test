@@ -68,6 +68,12 @@ variable "network_firewall_rules" {
             destination_addresses = ["10.2.1.0/26"]
             protocols = ["Any"]
     }
+        "acrvm-acr-rule" = {
+            source_addresses = ["10.1.0.4/32"]
+            destination_ports = ["*"]
+            destination_addresses = ["10.1.0.0/24"]
+            protocols = ["Any"]
+        }
   }
 }
 
@@ -80,6 +86,11 @@ variable "route" {
         }
         "webapp-db-allow" = {
             address_prefix = "10.2.1.0/26"
+            next_hop_type = "VirtualAppliance"
+            next_hop_in_ip_address = "10.3.1.4"
+        }
+        "db-webapp-allow" = {
+            address_prefix = "10.0.1.0/24"
             next_hop_type = "VirtualAppliance"
             next_hop_in_ip_address = "10.3.1.4"
         }
