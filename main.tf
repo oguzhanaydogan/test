@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "3.59.0"
+      version = "3.61.0"
     }
   }
   
@@ -13,11 +13,12 @@ terraform {
     key                  = "terraform.tfstate"
   }
 }
-#test
+
 provider "azurerm" {
   features{}
+  skip_provider_registration = true
 }
-##RG##
+#RG##
 module "resourcegroup" {
   source = "./modules/ResourceGroup"
   location = "East US"
