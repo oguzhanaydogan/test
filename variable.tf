@@ -11,7 +11,7 @@ variable "ssh_key_rg" {
 }
 
 variable "ssh_key_name" {
-  default = "azuresshemre"
+  default = "azuresshhakan"
 }
 
 variable "subnets"  {

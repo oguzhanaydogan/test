@@ -5,9 +5,10 @@ terraform {
       version = "3.59.0"
     }
   }
+  
   backend "azurerm" {
-    resource_group_name  = "DefaultResourceGroup-EUS"
-    storage_account_name = "ccseyhan2"
+    resource_group_name  = "coy-backend"
+    storage_account_name = "coystorage"
     container_name       = "terraformstate"
     key                  = "terraform.tfstate"
   }
@@ -225,7 +226,7 @@ resource "azurerm_service_plan" "example" {
 }
 
 data "azurerm_key_vault" "example" {
-  name                = "coykeyvault2"
+  name                = "keyvault-coy"
   resource_group_name = "ssh"
 }
 
