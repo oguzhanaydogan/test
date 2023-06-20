@@ -259,7 +259,7 @@ resource "azurerm_role_assignment" "web1_role_assignment" {
 }
 module "webapp1" {
   source = "./modules/webapp"
-  name = "coywebapp1"
+  name = "coywebapp-1"
   resource_group_name = module.resourcegroup.name
   location = module.resourcegroup.location
   service_plan_id = azurerm_service_plan.example.id
@@ -287,7 +287,7 @@ resource "azurerm_role_assignment" "web2_role_assignment" {
 }
 module "webapp2" {
   source = "./modules/webapp"
-  name = "coywebapp2"
+  name = "coywebapp-2"
   resource_group_name = module.resourcegroup.name
   location = module.resourcegroup.location
   service_plan_id = azurerm_service_plan.example.id
