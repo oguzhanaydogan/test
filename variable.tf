@@ -74,6 +74,12 @@ variable "network_firewall_rules" {
             destination_addresses = ["10.1.0.0/24"]
             protocols = ["Any"]
         }
+        "acr-webapp-rule2" = {
+            source_addresses = ["10.1.0.0/24"]
+            destination_ports = ["*"]
+            destination_addresses = ["10.0.1.0/24"]
+            protocols = ["Any"]
+    }
   }
 }
 

@@ -519,6 +519,18 @@ resource "azurerm_role_assignment" "example" {
   principal_id         = azurerm_virtual_machine.vm1.identity[0].principal_id
 }
 
+resource "azurerm_role_assignment" "example2" {
+  scope                = module.webapp1.id
+  role_definition_name = "Contributor"
+  principal_id         = azurerm_virtual_machine.vm1.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "example3" {
+  scope                = module.webapp2.id
+  role_definition_name = "Contributor"
+  principal_id         = azurerm_virtual_machine.vm1.identity[0].principal_id
+}
+
 resource "azurerm_application_insights" "insight" {
   name                = "tf-test-appinsights"
   location            = module.resourcegroup.location
