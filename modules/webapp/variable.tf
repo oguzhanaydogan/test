@@ -13,8 +13,8 @@ variable "app_settings" {
     type = map(string)
 }
 
-variable "image_name" {
-}
+# variable "image_name" {
+# }
 
-variable "image_tag" {
-}
+# variable "image_tag" {
+# }
