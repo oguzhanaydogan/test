@@ -267,7 +267,7 @@ module "webapp1" {
   # image_tag = "latest"
   
   app_settings = {
-    "MYSQL_PASSWORD"=data.azurerm_key_vault_secret.db_password.value
+    "MYSQL_PASSWORD"=data.azurerm_key_vault_secret.db_password.id
     "MYSQL_DATABASE_HOST"=module.mysql.host
     "MYSQL_DATABASE"=module.mysql.database_name
     "MYSQL_USER"=module.mysql.database_username
