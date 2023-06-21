@@ -13,3 +13,6 @@ systemctl enable docker
 usermod -a -G docker acr-vm
 
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+az login --identity
+az acr login -n coyhub
