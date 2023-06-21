@@ -431,6 +431,7 @@ resource "azurerm_virtual_machine" "vm1" {
   vm_size               = "Standard_D2s_v3"
   delete_os_disk_on_termination = true
   delete_data_disks_on_termination = true
+  depends_on = [ module.ACR ]
   identity {
     type = "SystemAssigned"
   }
