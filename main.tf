@@ -263,8 +263,8 @@ module "webapp1" {
   resource_group_name = module.resourcegroup.name
   location = module.resourcegroup.location
   service_plan_id = azurerm_service_plan.example.id
-  image_name = "coyhub.azurecr.io/web-server"
-  image_tag = "latest"
+  # image_name = "coyhub.azurecr.io/web-server"
+  # image_tag = "latest"
   
   app_settings = {
     "MYSQL_PASSWORD"=data.azurerm_key_vault_secret.db_password.value
@@ -292,8 +292,8 @@ module "webapp2" {
   resource_group_name = module.resourcegroup.name
   location = module.resourcegroup.location
   service_plan_id = azurerm_service_plan.example.id
-  image_name = "coyhub.azurecr.io/result-server"
-  image_tag = "latest"
+  # image_name = "coyhub.azurecr.io/result-server"
+  # image_tag = "latest"
   
   app_settings = {
     "MYSQL_PASSWORD"=data.azurerm_key_vault_secret.db_password.value

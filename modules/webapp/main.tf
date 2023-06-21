@@ -12,10 +12,10 @@ resource "azurerm_linux_web_app" "webapp" {
     container_registry_use_managed_identity = true
     vnet_route_all_enabled = true
     
-    application_stack {
-      docker_image = var.image_name
-      docker_image_tag = var.image_tag
-    }
+    # application_stack {
+    #   docker_image = var.image_name
+    #   docker_image_tag = var.image_tag
+    # }
   }
   identity {
     type = "SystemAssigned"
