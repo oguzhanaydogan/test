@@ -13,6 +13,9 @@ variable "app_settings" {
     type = map(string)
 }
 
+variable "vnet_integration_subnet" {
+}
+
 # variable "image_name" {
 # }
 

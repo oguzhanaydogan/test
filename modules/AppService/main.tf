@@ -4,6 +4,7 @@ resource "azurerm_linux_web_app" "webapp" {
   location            = var.location
   service_plan_id     = var.service_plan_id
   app_settings        = var.app_settings
+  virtual_network_subnet_id = var.vnet_integration_subnet
   
   lifecycle {
     ignore_changes = [virtual_network_subnet_id]

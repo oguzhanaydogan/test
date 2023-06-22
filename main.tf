@@ -295,111 +295,185 @@ module "app_service_plans" {
 #   sku_name            = "P1v2"
 # }
 
-data "azurerm_key_vault" "example" {
-  name                = "keyvault-coy"
-  resource_group_name = "ssh"
+module "key_vault_secrets" {
+  source = "./modules/KeyVaultSecret"
+  for_each = var.key_vault_secrets
+  key_vault = each.value.key_vault
+  key_vault_resource_group = each.value.key_vault_resource_group
+  secret = each.value.secret
+}
+# data "azurerm_key_vault" "example" {
+#   name                = "keyvault-coy"
+#   resource_group_name = "ssh"
+# }
+
+# data "azurerm_key_vault_secret" "db_password" {
+#   name         = "MYSQLPASSWORD"
+#   key_vault_id = data.azurerm_key_vault.example.id
+#   depends_on = [ azurerm_key_vault_access_policy.kvaccess ]
+# }
+
+module "key_vault_access_policies" {
+  source = "./modules/KeyVaultAccessPolicy"
+  for_each = var.key_vault_access_policies
+  key_vault = each.value.key_vault
+  key_vault_resource_group = each.value.key_vault_resource_group
+  key_permissions = each.value.key_permissions
+  secret_permissions = each.value.secret_permissions  
 }
 
-data "azurerm_key_vault_secret" "db_password" {
-  name         = "MYSQLPASSWORD"
-  key_vault_id = data.azurerm_key_vault.example.id
-  depends_on = [ azurerm_key_vault_access_policy.kvaccess ]
+# data "azurerm_client_config" "current" {}
+
+# resource "azurerm_key_vault_access_policy" "kvaccess" {
+#   key_vault_id = data.azurerm_key_vault.example.id
+#   tenant_id    = data.azurerm_client_config.current.tenant_id
+#   object_id    = data.azurerm_client_config.current.object_id
+
+#   key_permissions = [
+#     "Get", "List",
+#   ]
+#   secret_permissions = [
+#     "Get", "List",
+#   ]
+# }
+
+module "role_assignments" {
+  source = "./modules/RoleAssignment"
+  for_each = var.role_assignments
+  scope = module.acrs["${each.value.scope}"].id
+  principal_id = module.app_services["${each.value.principal_id}"].principal_id
+  role_definition = each.value.role_definition
 }
 
-data "azurerm_client_config" "current" {}
+# resource "azurerm_role_assignment" "web1_role_assignment" {
+#   scope              = module.ACR.id
+#   principal_id       = module.webapp1.key_vault_reference_identity_id
+#   role_definition_name = "AcrPull"
+# }
 
-resource "azurerm_key_vault_access_policy" "kvaccess" {
-  key_vault_id = data.azurerm_key_vault.example.id
-  tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = data.azurerm_client_config.current.object_id
+module "app_services" {
+  source = "./modules/AppService"
+  for_each = var.app_services
+  locals {
 
-  key_permissions = [
-    "Get", "List",
-  ]
-  secret_permissions = [
-    "Get", "List",
-  ]
-}
-
-resource "azurerm_role_assignment" "web1_role_assignment" {
-  scope              = module.ACR.id
-  principal_id       = module.webapp1.key_vault_reference_identity_id
-  role_definition_name = "AcrPull"
-}
-module "webapp1" {
-  source = "./modules/webapp"
-  name = "coywebapp-1"
-  resource_group_name = module.resourcegroup.name
-  location = module.resourcegroup.location
-  service_plan_id = azurerm_service_plan.example.id
-  
-  app_settings = {
-    "MYSQL_PASSWORD"=data.azurerm_key_vault_secret.db_password.id
+  # app insights
+  app_insights = azurerm_application_insights.insight.0
+  app_settings_insights = each.value.application_insights_enabled ? {
+    APPINSIGHTS_INSTRUMENTATIONKEY             = try(local.app_insights.instrumentation_key, "")
+    APPLICATIONINSIGHTS_CONNECTION_STRING      = try(local.app_insights.connection_string, "")
+    ApplicationInsightsAgent_EXTENSION_VERSION = "~3"
+  } : {}
+  common_app_settings = {
+    "MYSQL_PASSWORD"=module.key_vault_secrets["${each.value.mysql_password_secret}"].id
     "MYSQL_DATABASE_HOST"=module.mysql.host
     "MYSQL_DATABASE"=module.mysql.database_name
     "MYSQL_USER"=module.mysql.database_username
-    "APPINSIGHTS_INSTRUMENTATIONKEY"=azurerm_application_insights.insight.instrumentation_key
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"=azurerm_application_insights.insight.connection_string
-    "ApplicationInsightsAgent_EXTENSION_VERSION"="~3"
     "DOCKER_REGISTRY_SERVER_URL"=module.ACR.fqdn
-    "WEBSITE_PULL_IMAGE_OVER_VNET"=true
-    }
+    "WEBSITE_PULL_IMAGE_OVER_VNET"=true}
 }
-
-
-
-resource "azurerm_role_assignment" "web2_role_assignment" {
-  scope              = module.ACR.id
-  principal_id       = module.webapp2.key_vault_reference_identity_id
-  role_definition_name = "AcrPull"
-}
-module "webapp2" {
-  source = "./modules/webapp"
-  name = "coywebapp-2"
   resource_group_name = module.resourcegroup.name
   location = module.resourcegroup.location
-  service_plan_id = azurerm_service_plan.example.id
-  app_settings = {
-    "MYSQL_PASSWORD"=data.azurerm_key_vault_secret.db_password.id
-    "MYSQL_DATABASE_HOST"=module.mysql.host
-    "MYSQL_DATABASE"=module.mysql.database_name
-    "MYSQL_USER"=module.mysql.database_username  
-    "DOCKER_REGISTRY_SERVER_URL"=module.ACR.fqdn  
-    "WEBSITE_PULL_IMAGE_OVER_VNET"=true
-    }
-  }
-
-resource "azurerm_app_service_virtual_network_swift_connection" "vnet_integration1" {
-  app_service_id = module.webapp1.id
-  subnet_id      = module.subnets["app-subnet"].id
+  service_plan_id = module.app_service_plans["${each.value.app_service_plan}"].id
+  app_settings = merge(local.app_settings_insights, local.common_app_settings)
+  vnet_integration_subnet = module.subnets["${each.value.vnet_integration_subnet}"].id
 }
 
-resource "azurerm_app_service_virtual_network_swift_connection" "vnet_integration2" {
-  app_service_id = module.webapp2.id
-  subnet_id      = module.subnets["app-subnet"].id
-}
-module "ACR" {
+# module "webapp1" {
+#   source = "./modules/webapp"
+#   name = lookup(var.app_service_01_config,"name")
+#   resource_group_name = module.resourcegroup.name
+#   location = module.resourcegroup.location
+#   service_plan_id = module.app_service_plans["${lookup(var.app_service_01_config,"serviceplan")}"].id
+  
+#   app_settings = {
+#     "MYSQL_PASSWORD"=module.key_vault_secrets["key_vault_secret_mysql_password"].id
+#     "MYSQL_PASSWORD"=data.azurerm_key_vault_secret.db_password.id
+#     "MYSQL_DATABASE_HOST"=module.mysql.host
+#     "MYSQL_DATABASE"=module.mysql.database_name
+#     "MYSQL_USER"=module.mysql.database_username
+#     "APPINSIGHTS_INSTRUMENTATIONKEY"=azurerm_application_insights.insight.instrumentation_key
+#     "APPLICATIONINSIGHTS_CONNECTION_STRING"=azurerm_application_insights.insight.connection_string
+#     "ApplicationInsightsAgent_EXTENSION_VERSION"="~3"
+#     "DOCKER_REGISTRY_SERVER_URL"=module.ACR.fqdn
+#     "WEBSITE_PULL_IMAGE_OVER_VNET"=true
+#     }
+# }
+
+
+
+# resource "azurerm_role_assignment" "web2_role_assignment" {
+#   scope              = module.ACR.id
+#   principal_id       = module.webapp2.key_vault_reference_identity_id
+#   role_definition_name = "AcrPull"
+# }
+# module "webapp2" {
+#   source = "./modules/webapp"
+#   name = "coywebapp-2"
+#   resource_group_name = module.resourcegroup.name
+#   location = module.resourcegroup.location
+#   service_plan_id = azurerm_service_plan.example.id
+#   app_settings = {
+#     "MYSQL_PASSWORD"=data.azurerm_key_vault_secret.db_password.id
+#     "MYSQL_DATABASE_HOST"=module.mysql.host
+#     "MYSQL_DATABASE"=module.mysql.database_name
+#     "MYSQL_USER"=module.mysql.database_username  
+#     "DOCKER_REGISTRY_SERVER_URL"=module.ACR.fqdn  
+#     "WEBSITE_PULL_IMAGE_OVER_VNET"=true
+#     }
+#   }
+
+# resource "azurerm_app_service_virtual_network_swift_connection" "vnet_integration1" {
+#   app_service_id = module.webapp1.id
+#   subnet_id      = module.subnets["app-subnet"].id
+# }
+
+# resource "azurerm_app_service_virtual_network_swift_connection" "vnet_integration2" {
+#   app_service_id = module.webapp2.id
+#   subnet_id      = module.subnets["app-subnet"].id
+# }
+
+module "acrs" {
   source = "./modules/AzureContainerRegistry"
-  name = "coyhub"
+  for_each = var.acrs
+  name = each.value.name
   resource_group_name = module.resourcegroup.name
   location = module.resourcegroup.location
+  admin_enabled = each.value.admin_enabled
+  sku = each.value.sku
+  public_network_access_enabled = each.value.public_network_access_enabled
+  network_rule_bypass_option = each.value.network_rule_bypass_option
 }
 
-module "private_dns_zone_acr" {
+module "private_dns_zones" {
   source = "./modules/privatednszonewithlink"
-  name = "privatelink.azurecr.io"
+  for_each = var.private_dns_zones
   resourcegroup = module.resourcegroup.name
-  virtual_network_id = module.virtualnetwork2.id
-  attached_resource_name = module.ACR.name
+  virtual_network_id = module.networks["${each.value.virtual_network}"].id
+  link_name = each.value.link_name
+  name = each.value.dns_zone_name
 }
-
-module "private_dns_zone_acr_link_example" {
+# module "private_dns_zone_acr" {
+#   source = "./modules/privatednszonewithlink"
+#   name = "privatelink.azurecr.io"
+#   resourcegroup = module.resourcegroup.name
+#   virtual_network_id = module.virtualnetwork2.id
+#   attached_resource_name = module.ACR.name
+# }
+module "private_dns_zone_extra_links" {
   source = "./modules/privatednszoneextralink"
+  for_each = var.private_dns_zone_extra_links
   resourcegroup = module.resourcegroup.name
-  name = "private-dns-zone-acr-link-example"
-  virtual_network_id = module.virtualnetwork.id
-  private_dns_zone_name = module.private_dns_zone_acr.name
+  name = each.value.link_name
+  virtual_network_id = module.virtualnetworks["${each.value.virtual_network}"].id
+  private_dns_zone_name = module.private_dns_zones["${each.value.private_dns_zone}"].name
 }
+# module "private_dns_zone_acr_link_example" {
+#   source = "./modules/privatednszoneextralink"
+#   resourcegroup = module.resourcegroup.name
+#   name = "private-dns-zone-acr-link-example"
+#   virtual_network_id = module.virtualnetwork.id
+#   private_dns_zone_name = module.private_dns_zone_acr.name
+# }
 
 module "private_dns_zone_acr_link_hub" {
   source = "./modules/privatednszoneextralink"

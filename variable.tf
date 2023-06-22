@@ -267,6 +267,98 @@ variable "app_service_plans" {
     }
 }
 
+variable "key_vault_secrets" {
+    default = {
+        key_vault_secret_mysql_password ={
+            key_vault = "keyvault-coy"
+            key_vault_resource_group = "ssh"
+            secret = "MYSQLPASSWORD"
+        }
+    } 
+}
+
+variable "key_vault_access_policies" {
+    default = {
+        key_vault_access_policy_coy_vault = {
+            key_vault = "keyvault-coy"
+            key_vault_resource_group = "ssh"
+            key_permissions = [
+                "Get", "List",
+            ]
+            secret_permissions = [
+                "Get", "List",
+            ]
+        }
+    }
+}
+
+variable "role_assignments" {
+    default = {
+        app_01_role_assignment = {
+            scope = "acr_01"
+            principal_id = "app_01"
+            role_definition = "AcrPull"
+        }
+        app_02_role_assignment = {
+            scope = "acr_01"
+            principal_id = "app_02"
+            role_definition = "AcrPull"
+        }
+    }
+}
+
+variable "app_services" {
+    default = {
+        app_service_01 = {
+            name = "coywebapp-1"
+            service_plan = "app_service_plan_coy_phonebook"
+            mysql_password_secret = "key_vault_secret_mysql_password"
+            application_insights_enabled=true
+            vnet_integration_subnet = "vnet_app_subnet_app"            
+        }   
+        app_service_02 = {
+            name = "coywebapp-2"
+            service_plan = "app_service_plan_coy_phonebook"
+            mysql_password_secret = "key_vault_secret_mysql_password"
+            application_insights_enabled=false
+            vnet_integration_subnet = "vnet_app_subnet_app"
+        }
+    }
+}
+
+variable "acrs" {
+    default = {
+        acr_01 = {
+            name = "coyhub"
+            sku = "Premium"
+            admin_enabled = false
+            public_network_access_enabled = false
+            network_rule_bypass_option = "None"
+        }
+    }
+}
+
+variable "private_dns_zones" {
+    default = {
+        private_dns_zone_acr = {
+            virtual_network = "vnet_acr"
+            link_name = "link-vnet-acr"
+            dns_zone_name = "privatelink.azurecr.io"
+        }
+    }
+}
+
+variable "private_dns_zone_extra_links" {
+    default = {
+        private-dns-zone-acr-link = {
+            link_name = "private-dns-zone-acr-link"
+            virtual_network = "vnet_app"
+            private_dns_zone = "private_dns_zone_acr"
+        }
+    }
+  
+}
+
 variable "vm_name" {
     default = "acr-vm"
 }
