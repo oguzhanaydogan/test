@@ -6,225 +6,294 @@ terraform {
     }
   }
   
-  backend "azurerm" {
-    resource_group_name  = "coy-backend"
-    storage_account_name = "coystorage"
-    container_name       = "terraformstate"
-    key                  = "terraform.tfstate"
-  }
+  # backend "azurerm" {
+  #   resource_group_name  = "coy-backend"
+  #   storage_account_name = "coystorage"
+  #   container_name       = "terraformstate"
+  #   key                  = "terraform.tfstate"
+  # }
 }
 
 provider "azurerm" {
   features{}
   skip_provider_registration = true
 }
+
 #RG##
 module "resourcegroup" {
   source = "./modules/ResourceGroup"
-  location = "East US"
-  name = "DemoResourceGroup"
+  location = var.location
+  name = var.resource_group_name
 }
+
 ####example-network
-module "virtualnetwork" {
+module "virtualnetworks" {
   source = "./modules/VirtualNetwork"
-  name = "example-network"
+  for_each = var.virtual_networks
   location = module.resourcegroup.location
   resource_group_name = module.resourcegroup.name
-  address_space = ["10.0.0.0/16"]
+  name = each.value.name
+  address_space = each.value.name
 }
+
+# module "virtualnetwork2" {
+#   source = "./modules/VirtualNetwork"
+#   name = "acr-network"
+#   location = module.resourcegroup.location
+#   resource_group_name = module.resourcegroup.name
+#   address_space = ["10.1.0.0/16"]
+# }
+
+# module "hub_virtual_network" {
+#   source = "./modules/VirtualNetwork"
+#   name = "hub-network"
+#   location = module.resourcegroup.location
+#   resource_group_name = module.resourcegroup.name
+#   address_space = ["10.3.0.0/16"]
+# }
+
+# module "db_network" {
+#   source = "./modules/VirtualNetwork"
+#   name = "db-network"
+#   location = module.resourcegroup.location
+#   resource_group_name = module.resourcegroup.name
+#   address_space = ["10.2.0.0/16"]
+# }
+
 
 module "subnets" {
   source = "./modules/subnet"
   for_each = var.subnets
   resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.virtualnetwork.name
-  subnet_name = each.key
+  virtual_network_name = module.virtual_networks["${each.value.virtual_network_name}"].name
+  subnet_name = each.value.name
   address_prefixes = each.value.address_prefixes
   delegation = each.value.delegation
   delegation_name = each.value.delegation_name
 }
 
 ##### acr-network
-module "virtualnetwork2" {
-  source = "./modules/VirtualNetwork"
-  name = "acr-network"
-  location = module.resourcegroup.location
-  resource_group_name = module.resourcegroup.name
-  address_space = ["10.1.0.0/16"]
-}
 
-module "subnetacr" {
-  source = "./modules/subnet"
-  resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.virtualnetwork2.name
-  subnet_name = "acr-subnet"
-  address_prefixes = ["10.1.0.0/24"]
-  delegation = false
-  delegation_name = ""
-}
+
+# module "subnetacr" {
+#   source = "./modules/subnet"
+#   resource_group_name = module.resourcegroup.name
+#   virtual_network_name = module.virtualnetwork2.name
+#   subnet_name = "acr-subnet"
+#   address_prefixes = ["10.1.0.0/24"]
+#   delegation = false
+#   delegation_name = ""
+# }
 
 #### hub-network
-module "hub_virtual_network" {
-  source = "./modules/VirtualNetwork"
-  name = "hub-network"
-  location = module.resourcegroup.location
-  resource_group_name = module.resourcegroup.name
-  address_space = ["10.3.0.0/16"]
-}
 
-module "hub_default" {
-  source = "./modules/subnet"
-  resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.hub_virtual_network.name
-  subnet_name = "default"
-  address_prefixes = ["10.3.0.0/24"]
-  delegation = false
-  delegation_name = ""
-}
+# module "hub_default" {
+#   source = "./modules/subnet"
+#   resource_group_name = module.resourcegroup.name
+#   virtual_network_name = module.hub_virtual_network.name
+#   subnet_name = "default"
+#   address_prefixes = ["10.3.0.0/24"]
+#   delegation = false
+#   delegation_name = ""
+# }
 
-module "firewall_subnet" {
-  source = "./modules/subnet"
-  resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.hub_virtual_network.name
-  subnet_name = "AzureFirewallSubnet"
-  address_prefixes = ["10.3.1.0/26"]
-  delegation = false
-  delegation_name = ""
-}
+# module "firewall_subnet" {
+#   source = "./modules/subnet"
+#   resource_group_name = module.resourcegroup.name
+#   virtual_network_name = module.hub_virtual_network.name
+#   subnet_name = "AzureFirewallSubnet"
+#   address_prefixes = ["10.3.1.0/26"]
+#   delegation = false
+#   delegation_name = ""
+# }
 
 #### db-network
-module "db_network" {
-  source = "./modules/VirtualNetwork"
-  name = "db-network"
-  location = module.resourcegroup.location
-  resource_group_name = module.resourcegroup.name
-  address_space = ["10.2.0.0/16"]
-}
+# module "db_subnet" {
+#   source = "./modules/subnet"
+#   resource_group_name = module.resourcegroup.name
+#   virtual_network_name = module.db_network.name
+#   subnet_name = "mysql-subnet"
+#   address_prefixes = ["10.2.1.0/26"]
+#   delegation = true
+#   delegation_name = "Microsoft.DBforMySQL/flexibleServers"
+# }
 
-module "db_subnet" {
-  source = "./modules/subnet"
-  resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.db_network.name
-  subnet_name = "mysql-subnet"
-  address_prefixes = ["10.2.1.0/26"]
-  delegation = true
-  delegation_name = "Microsoft.DBforMySQL/flexibleServers"
-}
-
-module "vnet_peering_db_hub" {
+module "vnet_peerings" {
   source = "./modules/vnetpeering"
-  name = "db-hub"
+  for_each = var.vnet_peerings
   resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.db_network.name
-  remote_virtual_network_id = module.hub_virtual_network.id
+  name = each.value.name
+  virtual_network_name = module.virtualnetworks["${each.value.virtual_network}"].name
+  remote_virtual_network_id = module.virtualnetworks["${each.value.remote_virtual_network}"].id
+  
 }
 
-module "vnet_peering_hub_db" {
-  source = "./modules/vnetpeering"
-  name = "hub-db"
-  resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.hub_virtual_network.name
-  remote_virtual_network_id = module.db_network.id
-}
+# module "vnet_peering_db_hub" {
+#   source = "./modules/vnetpeering"
+#   name = "db-hub"
+#   resource_group_name = module.resourcegroup.name
+#   virtual_network_name = module.db_network.name
+#   remote_virtual_network_id = module.hub_virtual_network.id
+# }
 
-module "vnet_peering_example_hub" {
-  source = "./modules/vnetpeering"
-  name = "example-hub"
-  resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.virtualnetwork.name
-  remote_virtual_network_id = module.hub_virtual_network.id
-}
+# module "vnet_peering_hub_db" {
+#   source = "./modules/vnetpeering"
+#   name = "hub-db"
+#   resource_group_name = module.resourcegroup.name
+#   virtual_network_name = module.hub_virtual_network.name
+#   remote_virtual_network_id = module.db_network.id
+# }
 
-module "vnet_peering_hub_example" {
-  source = "./modules/vnetpeering"
-  name = "hub-example"
-  resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.hub_virtual_network.name
-  remote_virtual_network_id = module.virtualnetwork.id
-}
+# module "vnet_peering_example_hub" {
+#   source = "./modules/vnetpeering"
+#   name = "example-hub"
+#   resource_group_name = module.resourcegroup.name
+#   virtual_network_name = module.virtualnetwork.name
+#   remote_virtual_network_id = module.hub_virtual_network.id
+# }
 
-module "vnet_peering_acr_hub" {
-  source = "./modules/vnetpeering"
-  name = "acr-hub"
-  resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.virtualnetwork2.name
-  remote_virtual_network_id = module.hub_virtual_network.id
-}
+# module "vnet_peering_hub_example" {
+#   source = "./modules/vnetpeering"
+#   name = "hub-example"
+#   resource_group_name = module.resourcegroup.name
+#   virtual_network_name = module.hub_virtual_network.name
+#   remote_virtual_network_id = module.virtualnetwork.id
+# }
 
-module "vnet_peering_hub_acr" {
-  source = "./modules/vnetpeering"
-  name = "hub-acr"
-  resource_group_name = module.resourcegroup.name
-  virtual_network_name = module.hub_virtual_network.name
-  remote_virtual_network_id = module.virtualnetwork2.id
-}
+# module "vnet_peering_acr_hub" {
+#   source = "./modules/vnetpeering"
+#   name = "acr-hub"
+#   resource_group_name = module.resourcegroup.name
+#   virtual_network_name = module.virtualnetwork2.name
+#   remote_virtual_network_id = module.hub_virtual_network.id
+# }
 
-module "routetable_webapptoacr" {
+# module "vnet_peering_hub_acr" {
+#   source = "./modules/vnetpeering"
+#   name = "hub-acr"
+#   resource_group_name = module.resourcegroup.name
+#   virtual_network_name = module.hub_virtual_network.name
+#   remote_virtual_network_id = module.virtualnetwork2.id
+# }
+
+module "route_tables" {
   source = "./modules/RouteTable"
-  name = "webapp-acr-allow"
+  for_each = var.route_tables
   resource_group_name = module.resourcegroup.name
   location = module.resourcegroup.location
-  route = var.route
-  subnet_id = module.subnets["app-subnet"].id
+  name = each.value.name
+  route = each.value.routes
+  subnet_id = module.subnets["${each.value.subnet_name}"].id
+  subnet_route_table_associations = each.value.subnet_route_table_associations
 }
 
-resource "azurerm_subnet_route_table_association" "example" {
-  subnet_id      = module.subnetacr.id
-  route_table_id = module.routetable_webapptoacr.id
+module "subnet_route_table_associations" {
+  source = "./modules/RouteTableExtraAssociation"
+  for_each = var.subnet_route_table_associations
+  subnet_id = module.subnets["${each.value.subnet}"].id
+  route_table_id = module.route_tables["${each.value.route_table}"].id
 }
+# resource "azurerm_subnet_route_table_association" "example" {
+#   subnet_id      = module.subnetacr.id
+#   route_table_id = module.routetable_webapptoacr.id
+# }
 
-resource "azurerm_subnet_route_table_association" "db_association" {
-  subnet_id      = module.db_subnet.id
-  route_table_id = module.routetable_webapptoacr.id
-}
+# resource "azurerm_subnet_route_table_association" "db_association" {
+#   subnet_id      = module.db_subnet.id
+#   route_table_id = module.routetable_webapptoacr.id
+# }
 
-resource "azurerm_firewall" "hub_wall" {
-  name                = "testfirewall"
-  location            = module.resourcegroup.location
+module "public_ip_addresses" {
+  source = "./modules/PublicIPAddress"
+  for_each = var.public_ip_addresses
   resource_group_name = module.resourcegroup.name
-  sku_name            = "AZFW_VNet"
-  sku_tier            = "Premium"
-
-  ip_configuration {
-    name                 = "configuration"
-    subnet_id            = module.firewall_subnet.id
-    public_ip_address_id = azurerm_public_ip.hubwall_pip.id
-  }
+  location = module.resourcegroup.location
+  name = each.value.name
+  allocation_method = each.value.allocation_method
+  sku = each.value.sku
 }
 
-resource "azurerm_firewall_network_rule_collection" "example" {
-  name                = "testcollection"
-  azure_firewall_name = azurerm_firewall.hub_wall.name
+module "firewalls" {
+  source = "./modules/AzureFirewall"
+  for_each = var.firewalls
+  location = module.resourcegroup.location
   resource_group_name = module.resourcegroup.name
-  priority            = 100
-  action              = "Allow"
-
-   dynamic "rule" {
-    for_each = var.network_firewall_rules
-    content {
-        name = rule.key
-        source_addresses = rule.value.source_addresses
-        destination_ports = rule.value.destination_ports
-        destination_addresses = rule.value.destination_addresses
-        protocols = rule.value.protocols
-    }    
-  }
-}
-resource "azurerm_public_ip" "hubwall_pip" {
-  name                = "hubwallpip"
-  location            = module.resourcegroup.location
-  resource_group_name = module.resourcegroup.name
-  allocation_method   = "Static"
-  sku                 = "Standard"
+  name = each.value.name
+  sku_tier = each.value.sku_tier
+  subnet_id = module.subnets["${each.value.subnet}"].id
+  public_ip_address_id = module.public_ip_addresses["${each.value.public_ip_address}"].id
 }
 
-resource "azurerm_service_plan" "example" {
-  name                = "oaydoganwebapp"
+# resource "azurerm_firewall" "hub_firewall" {
+#   name                = lookup(var.hub_firewall_config,"name")
+#   location            = module.resourcegroup.location
+#   resource_group_name = module.resourcegroup.name
+#   sku_name            = "AZFW_VNet"
+#   sku_tier            = "Premium"
+
+#   ip_configuration {
+#     name                 = "configuration"
+#     subnet_id            = module.firewall_subnet.id
+#     public_ip_address_id = azurerm_public_ip.hubwall_pip.id
+#   }
+# }
+
+module "firewall_network_rule_collections" {
+  source = "./modules/AzureFirewallNetworkRuleCollection"
+  for_each = var.firewall_network_rule_collections
   resource_group_name = module.resourcegroup.name
-  location            = module.resourcegroup.location
-  os_type             = "Linux"
-  sku_name            = "P1v2"
+  name = each.value.name
+  firewall = module.firewalls["${each.value.firewall}"].name
+  priority = each.value.priority
+  action = each.value.action
+  firewall_network_rules = each.value.firewall_network_rules
 }
+
+# resource "azurerm_firewall_network_rule_collection" "example" {
+#   name                = "testcollection"
+#   azure_firewall_name = azurerm_firewall.hub_wall.name
+#   resource_group_name = module.resourcegroup.name
+#   priority            = 100
+#   action              = "Allow"
+
+#    dynamic "rule" {
+#     for_each = var.network_firewall_rules
+#     content {
+#         name = rule.key
+#         source_addresses = rule.value.source_addresses
+#         destination_ports = rule.value.destination_ports
+#         destination_addresses = rule.value.destination_addresses
+#         protocols = rule.value.protocols
+#     }    
+#   }
+# }
+
+
+# resource "azurerm_public_ip" "hubwall_pip" {
+#   name                = "hubwallpip"
+#   location            = module.resourcegroup.location
+#   resource_group_name = module.resourcegroup.name
+#   allocation_method   = "Static"
+#   sku                 = "Standard"
+# }
+
+module "app_service_plans" {
+  source = "./modules/AppServicePlan"
+  for_each = var.app_service_plans
+  resource_group_name = module.resourcegroup.name
+  location = module.resourcegroup.location
+  name = each.value.name
+  os_type = each.value.os_type
+  sku_name = each.value.sku_name
+}
+
+# resource "azurerm_service_plan" "example" {
+#   name                = "oaydoganwebapp"
+#   resource_group_name = module.resourcegroup.name
+#   location            = module.resourcegroup.location
+#   os_type             = "Linux"
+#   sku_name            = "P1v2"
+# }
 
 data "azurerm_key_vault" "example" {
   name                = "keyvault-coy"
