@@ -154,8 +154,7 @@ variable "vnet_peerings" {
     }
 }
 
-######### route table  !!!!!!!eksik!!!!!!!!!! ###########
-
+### route tables  
 variable "route_tables" {
     default = {
         route_table_01 ={
@@ -200,10 +199,21 @@ variable "subnet_route_table_associations" {
 
 variable "public_ip_addresses" {
     default = {
-        public_ip_firewall = {
+        public_ip_firewall_hub = {
             name = "public_ip_firewall_hub"
             allocation_method = "Static"
             sku = "Standard"
+        }
+        public_ip_app_gateway = {
+            name = "PublicFrontendIpIPv4"
+            allocation_method = "Static"
+            sku = "Standard"
+        }
+        public_ip_virtual_machine_01 = {
+            name = "public-ip-vm-custom-agent"
+            allocation_method = "Static"
+            sku = "Standard"
+
         }
     }
 }
@@ -267,6 +277,26 @@ variable "app_service_plans" {
     }
 }
 
+variable "app_services" {
+    default = {
+        app_service_01 = {
+            name = "coywebapp-1"
+            service_plan = "app_service_plan_coy_phonebook"
+            mysql_password_secret = "key_vault_secret_mysql_password"
+            application_insights_enabled=true
+            vnet_integration_subnet = "vnet_app_subnet_app"            
+        }   
+        app_service_02 = {
+            name = "coywebapp-2"
+            service_plan = "app_service_plan_coy_phonebook"
+            mysql_password_secret = "key_vault_secret_mysql_password"
+            application_insights_enabled=false
+            vnet_integration_subnet = "vnet_app_subnet_app"
+        }
+    }
+}
+
+
 variable "key_vault_secrets" {
     default = {
         key_vault_secret_mysql_password ={
@@ -307,24 +337,6 @@ variable "role_assignments" {
     }
 }
 
-variable "app_services" {
-    default = {
-        app_service_01 = {
-            name = "coywebapp-1"
-            service_plan = "app_service_plan_coy_phonebook"
-            mysql_password_secret = "key_vault_secret_mysql_password"
-            application_insights_enabled=true
-            vnet_integration_subnet = "vnet_app_subnet_app"            
-        }   
-        app_service_02 = {
-            name = "coywebapp-2"
-            service_plan = "app_service_plan_coy_phonebook"
-            mysql_password_secret = "key_vault_secret_mysql_password"
-            application_insights_enabled=false
-            vnet_integration_subnet = "vnet_app_subnet_app"
-        }
-    }
-}
 
 variable "acrs" {
     default = {
@@ -345,18 +357,65 @@ variable "private_dns_zones" {
             link_name = "link-vnet-acr"
             dns_zone_name = "privatelink.azurecr.io"
         }
+        private_dns_zone_app = {
+            virtual_network = "vnet_app"
+            link_name = "link-vnet-app"
+            dns_zone_name = "privatelink.azurewebsites.net"
+        }
+        private_dns_zone_mysql = {
+            virtual_network = "vnet_db"
+            link_name = "link-vnet-db"
+            dns_zone_name = "privatelink.mysql.database.azure.com"
+        }
     }
 }
 
 variable "private_dns_zone_extra_links" {
     default = {
-        private-dns-zone-acr-link = {
-            link_name = "private-dns-zone-acr-link"
+        private_dns_zone_acr_link_vnet_app = {
+            link_name = "private-dns-zone-acr-link-vnet-app"
             virtual_network = "vnet_app"
             private_dns_zone = "private_dns_zone_acr"
         }
+        private_dns_zone_acr_link_vnet_hub = {
+            link_name = "private-dns-zone-acr-link-vnet-hub"
+            virtual_network = "vnet_app"
+            private_dns_zone = "private_dns_zone_acr"
+        }
+        private_dns_zone_mysql_link_vnet_app = {
+            link_name = "private-dns-zone-mysql-link-vnet-app"
+            virtual_network = "vnet_app"
+            private_dns_zone = "private_dns_zone_mysql"
+        }
+        private_dns_zone_db_link_vnet_hub = {
+            link_name = "private-dns-zone-mysql-link-vnet-hub"
+            virtual_network = "vnet_hub"
+            private_dns_zone = "private_dns_zone_mysql"
+        }
     }
-  
+}
+
+variable "private_endpoints" {
+    default = {
+        private_endpoint_acr = {
+            attached_resource_name = "coyhub"
+            private_dns_zone_ids = "private_dns_zone_acr"
+            subresource_name = "registry"
+            subnet = "vnet_acr_subnet_acr"
+        }
+        private_endpoint_app1 = {
+            attached_resource_name = "app_service_01"
+            private_dns_zone_ids = "private_dns_zone_app"
+            subresource_name = "sites"
+            subnet = "vnet_app_subnet_app1endpoint"
+        }
+        private_endpoint_app2 = {
+            attached_resource_name = "app_service_02"
+            private_dns_zone_ids = "private_dns_zone_app"
+            subresource_name = "sites"
+            subnet = "vnet_app_subnet_app2endpoint"
+        }        
+    }
 }
 
 variable "vm_name" {

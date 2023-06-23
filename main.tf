@@ -475,54 +475,75 @@ module "private_dns_zone_extra_links" {
 #   private_dns_zone_name = module.private_dns_zone_acr.name
 # }
 
-module "private_dns_zone_acr_link_hub" {
-  source = "./modules/privatednszoneextralink"
+# module "private_dns_zone_acr_link_hub" {
+#   source = "./modules/privatednszoneextralink"
+#   resourcegroup = module.resourcegroup.name
+#   name = "private-dns-zone-acr-link-hub"
+#   virtual_network_id = module.hub_virtual_network.id
+#   private_dns_zone_name = module.private_dns_zone_acr.name
+# }
+
+locals {
+  attached_resource_ids = [
+    module.acrs["acr_01"].id, 
+    module.app_services["app_service_01"].id,
+    module.app_services["app_service_02"].id
+  ]
+}
+
+##########################################
+module "private_endpoints" {
+  source = "./modules/privateendpoint"
+  for_each = var.private_endpoints
   resourcegroup = module.resourcegroup.name
-  name = "private-dns-zone-acr-link-hub"
-  virtual_network_id = module.hub_virtual_network.id
-  private_dns_zone_name = module.private_dns_zone_acr.name
-}
+  location = module.resourcegroup.location
+  subnet_id = module.subnets["${each.value.subnet}"].id
+  private_dns_zone_ids = [module.private_dns_zones["${each.value.private_dns_zone}"].id]
+  attached_resource_name = each.value.attached_resource_name
+  attached_resource_id = local.attached_resource_ids[each.key.index].id
+  subresource_name = each.value.subresource_name
+  }
+###############################
+# module "private_endpoint_acr" {
+#     source = "./modules/privateendpoint"
+#     resourcegroup = module.resourcegroup.name
+#     location = module.resourcegroup.location
+#     subnet_id = module.subnetacr.id
+#     private_dns_zone_ids = ["${module.private_dns_zone_acr.id}"]
+#     attached_resource_name = module.ACR.name
+#     attached_resource_id = module.ACR.id
+#     subresource_name = "registry"
+# }
 
-module "private_endpoint_acr" {
-    source = "./modules/privateendpoint"
-    resourcegroup = module.resourcegroup.name
-    location = module.resourcegroup.location
-    subnet_id = module.subnetacr.id
-    private_dns_zone_ids = ["${module.private_dns_zone_acr.id}"]
-    attached_resource_name = module.ACR.name
-    attached_resource_id = module.ACR.id
-    subresource_name = "registry"
-}
+# module "private_dns_zone_apps" {
+#   source = "./modules/privatednszonewithlink"
+#   name = "privatelink.azurewebsites.net"
+#   resourcegroup = module.resourcegroup.name
+#   virtual_network_id = module.virtualnetwork.id
+#   attached_resource_name = "apps"
+# }
 
-module "private_dns_zone_apps" {
-  source = "./modules/privatednszonewithlink"
-  name = "privatelink.azurewebsites.net"
-  resourcegroup = module.resourcegroup.name
-  virtual_network_id = module.virtualnetwork.id
-  attached_resource_name = "apps"
-}
+# module "private_endpoint_app1" {
+#     source = "./modules/privateendpoint"
+#     resourcegroup = module.resourcegroup.name
+#     location = module.resourcegroup.location
+#     subnet_id = module.subnets["app1endpoint_subnet"].id
+#     private_dns_zone_ids = ["${module.private_dns_zone_apps.id}"]
+#     attached_resource_name = module.webapp1.name
+#     attached_resource_id = module.webapp1.id
+#     subresource_name = "sites"
+# }
 
-module "private_endpoint_app1" {
-    source = "./modules/privateendpoint"
-    resourcegroup = module.resourcegroup.name
-    location = module.resourcegroup.location
-    subnet_id = module.subnets["app1endpoint_subnet"].id
-    private_dns_zone_ids = ["${module.private_dns_zone_apps.id}"]
-    attached_resource_name = module.webapp1.name
-    attached_resource_id = module.webapp1.id
-    subresource_name = "sites"
-}
-
-module "private_endpoint_app2" {
-    source = "./modules/privateendpoint"
-    resourcegroup = module.resourcegroup.name
-    location = module.resourcegroup.location
-    subnet_id = module.subnets["app2endpoint_subnet"].id
-    private_dns_zone_ids = ["${module.private_dns_zone_apps.id}"]
-    attached_resource_name = module.webapp2.name
-    attached_resource_id = module.webapp2.id
-    subresource_name = "sites"
-}
+# module "private_endpoint_app2" {
+#     source = "./modules/privateendpoint"
+#     resourcegroup = module.resourcegroup.name
+#     location = module.resourcegroup.location
+#     subnet_id = module.subnets["app2endpoint_subnet"].id
+#     private_dns_zone_ids = ["${module.private_dns_zone_apps.id}"]
+#     attached_resource_name = module.webapp2.name
+#     attached_resource_id = module.webapp2.id
+#     subresource_name = "sites"
+# }
 module "mysql" {
   source = "./modules/MySql"
   server_name = "coy-database-server"
@@ -537,30 +558,58 @@ module "mysql" {
   depends_on = [ module.private_dns_zone_mysql ]
 }
 
-module "private_dns_zone_mysql" {
-  source = "./modules/privatednszonewithlink"
-  name = "privatelink.mysql.database.azure.com"
-  resourcegroup = module.resourcegroup.name
-  attached_resource_name = "coy-database-server"
-  virtual_network_id = module.db_network.id
-}
+# module "private_dns_zone_mysql" {
+#   source = "./modules/privatednszonewithlink"
+#   name = "privatelink.mysql.database.azure.com"
+#   resourcegroup = module.resourcegroup.name
+#   attached_resource_name = "coy-database-server"
+#   virtual_network_id = module.db_network.id
+# }
 
-module "private_dns_zone_mysql_link_example" {
-  source = "./modules/privatednszoneextralink"
-  resourcegroup = module.resourcegroup.name
-  name = "private-dns-zone-mysql-link-example"
-  virtual_network_id = module.virtualnetwork.id
-  private_dns_zone_name = module.private_dns_zone_mysql.name
-}
+# module "private_dns_zone_mysql_link_example" {
+#   source = "./modules/privatednszoneextralink"
+#   resourcegroup = module.resourcegroup.name
+#   name = "private-dns-zone-mysql-link-example"
+#   virtual_network_id = module.virtualnetwork.id
+#   private_dns_zone_name = module.private_dns_zone_mysql.name
+# }
 
-module "private_dns_zone_db_link_hub" {
-  source = "./modules/privatednszoneextralink"
-  resourcegroup = module.resourcegroup.name
-  name = "private-dns-zone-mysql-link-hub"
-  virtual_network_id = module.hub_virtual_network.id
-  private_dns_zone_name = module.private_dns_zone_mysql.name
+# module "private_dns_zone_db_link_hub" {
+#   source = "./modules/privatednszoneextralink"
+#   resourcegroup = module.resourcegroup.name
+#   name = "private-dns-zone-mysql-link-hub"
+#   virtual_network_id = module.hub_virtual_network.id
+#   private_dns_zone_name = module.private_dns_zone_mysql.name
+# }
+module "linux_virtual_machines" {
+  source = "./modules/VirtualMachine"
+  for_each = var.linux_virtual_machines
+  location         = module.resourcegroup.location
+  resourcegroup    = module.resourcegroup.name
+  vm_name = each.value.vm_name
+  vm_size = each.value.vm_size
+  delete_os_disk_on_termination = each.value.delete_os_disk_on_termination
+  delete_data_disks_on_termination = each.value.delete_data_disks_on_termination
+  identity_enabled = each.value.identity_enabled
+  vm_identity_type = each.value.vm_identity_type
+  storage_image_reference_publisher = each.value.storage_image_reference_publisher
+  storage_image_reference_offer = each.value.storage_image_reference_offer
+  storage_image_reference_sku = each.value.storage_image_reference_sku
+  storage_image_reference_version = each.value.storage_image_reference_version
+  storage_os_disk_name = each.value.storage_os_disk_name
+  storage_os_disk_caching = each.value.storage_os_disk_caching
+  storage_os_disk_create_option = each.value.storage_os_disk_create_option
+  storage_os_disk_managed_disk_type = each.value.storage_os_disk_managed_disk_type
+  admin_username = each.value.admin_username
+  custom_data = each.value.custom_data
+  os_profile_linux_config_disable_password_authentication = each.value.os_profile_linux_config_disable_password_authentication
+  os_profile_linux_config_ssh_keys_path = each.value.os_profile_linux_config_ssh_keys_path
+  os_profile_linux_config_ssh_keys_key_data = each.value.os_profile_linux_config_ssh_keys_key_data
+  ip_configuration_name = each.value.ip_configuration_name
+  ip_configuration_subnet_id = each.value.ip_configuration_subnet_id
+  ip_configuration_private_ip_address_allocation = each.value.ip_configuration_private_ip_address_allocation
+  ip_configuration_public_ip_address_id = each.value.ip_configuration_public_ip_address_id
 }
-
 resource "azurerm_virtual_machine" "vm1" {
   name                  = var.vm_name
   location              = module.resourcegroup.location
@@ -597,29 +646,29 @@ resource "azurerm_virtual_machine" "vm1" {
     ssh_keys {
       path = "/home/${var.admin_username}/.ssh/authorized_keys"
       key_data = data.azurerm_ssh_public_key.ssh_public_key.public_key
-   }
- }
-}
-
-resource "azurerm_public_ip" "pip1" {
-  name                = "${var.vm_name}-pip"
-  resource_group_name = module.resourcegroup.name
-  location            = module.resourcegroup.location
-  allocation_method   = "Static"
-}
-
-resource "azurerm_network_interface" "main" {
-  name                = "${var.vm_name}-nic"
-  location            = module.resourcegroup.location
-  resource_group_name = module.resourcegroup.name
-
-  ip_configuration {
-    name                          = "testconfiguration1"
-    subnet_id                     = module.subnetacr.id
-    private_ip_address_allocation = "Dynamic"
-    public_ip_address_id = azurerm_public_ip.pip1.id
+    }
   }
 }
+
+# resource "azurerm_public_ip" "pip1" {
+#   name                = "${var.vm_name}-pip"
+#   resource_group_name = module.resourcegroup.name
+#   location            = module.resourcegroup.location
+#   allocation_method   = "Static"
+# }
+
+# resource "azurerm_network_interface" "main" {
+#   name                = "${var.vm_name}-nic"
+#   location            = module.resourcegroup.location
+#   resource_group_name = module.resourcegroup.name
+
+#   ip_configuration {
+#     name                          = "testconfiguration1"
+#     subnet_id                     = module.subnetacr.id
+#     private_ip_address_allocation = "Dynamic"
+#     public_ip_address_id = azurerm_public_ip.pip1.id
+#   }
+# }
 
 
 data "azurerm_ssh_public_key" "ssh_public_key" {
@@ -676,13 +725,13 @@ resource "azurerm_application_insights" "insight" {
   application_type    = "web"
 }
 
-resource "azurerm_public_ip" "appgw_pip" {
-  name                = "PublicFrontendIpIPv4"
-  resource_group_name = module.resourcegroup.name
-  location            = module.resourcegroup.location
-  allocation_method   = "Static"
-  sku = "Standard"
-}
+# resource "azurerm_public_ip" "appgw_pip" {
+#   name                = "PublicFrontendIpIPv4"
+#   resource_group_name = module.resourcegroup.name
+#   location            = module.resourcegroup.location
+#   allocation_method   = "Static"
+#   sku = "Standard"
+# }
 
 resource "azurerm_application_gateway" "appgw" {
   name                = "coy-appgateway"
