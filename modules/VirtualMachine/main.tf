@@ -29,14 +29,14 @@ resource "azurerm_virtual_machine" "vm1" {
     os_profile {
     computer_name  = var.vm_name
     admin_username = var.admin_username
-    custom_data = var.custom_data
+    custom_data = file("${var.custom_data}")
     
   }
     os_profile_linux_config {
     disable_password_authentication = var.os_profile_linux_config_disable_password_authentication
         ssh_keys {
-            path = var.os_profile_linux_config_ssh_keys_path
-            key_data = var.os_profile_linux_config_ssh_keys_key_data
+            path = "/home/${var.admin_username}/.ssh/authorized_keys"
+            key_data = data.azurerm_ssh_public_key.ssh_public_key.public_key
     }
   }
 }
@@ -53,3 +53,15 @@ resource "azurerm_network_interface" "main" {
     public_ip_address_id          = var.ip_configuration_public_ip_address_id
   }
 }
+
+data "azurerm_ssh_public_key" "ssh_public_key" {
+  resource_group_name = var.ssh_key_rg
+  name                = var.ssh_key_name
+}
+
+resource "azurerm_network_interface_security_group_association" "nic1" {
+  count = var.nsg_association_enabled ? 1 : 0
+  network_interface_id      = azurerm_network_interface.main.id
+  network_security_group_id = var.nsg_id
+}
+

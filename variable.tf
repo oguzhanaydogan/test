@@ -322,20 +322,20 @@ variable "key_vault_access_policies" {
     }
 }
 
-variable "role_assignments" {
-    default = {
-        app_01_role_assignment = {
-            scope = "acr_01"
-            principal_id = "app_01"
-            role_definition = "AcrPull"
-        }
-        app_02_role_assignment = {
-            scope = "acr_01"
-            principal_id = "app_02"
-            role_definition = "AcrPull"
-        }
-    }
-}
+# variable "role_assignments" {
+#     default = {
+#         app_01_role_assignment = {
+#             scope = "acr_01"
+#             principal_id = "app_01"
+#             role_definition = "AcrPull"
+#         }
+#         app_02_role_assignment = {
+#             scope = "acr_01"
+#             principal_id = "app_02"
+#             role_definition = "AcrPull"
+#         }
+#     }
+# }
 
 
 variable "acrs" {
@@ -418,18 +418,86 @@ variable "private_endpoints" {
     }
 }
 
-variable "vm_name" {
-    default = "acr-vm"
+# variable "vm_name" {
+#     default = "acr-vm"
+# }
+
+# variable "admin_username" {
+#     default = "acr-vm"
+# }
+
+# variable "ssh_key_rg" {
+#     default = "ssh"
+# }
+
+# variable "ssh_key_name" {
+#   default = "azuresshhakan"
+# }
+
+variable "linux_virtual_machines" {
+    default = {
+        linux_virtual_machine_01 = {
+            vm_name = "vm-custom-agent"
+            vm_size = "Standard_D2s_v3"
+            delete_data_disks_on_termination = true
+            delete_os_disk_on_termination = true
+            identity_enabled = true
+            vm_identity_type = "SystemAssigned"
+            storage_image_reference_publisher = "Canonical"
+            storage_image_reference_offer = "UbuntuServer"
+            storage_image_reference_sku = "18.04-LTS"
+            storage_image_reference_version = "latest"
+            storage_os_disk_name = "myosdisk1"
+            storage_os_disk_caching = "ReadWrite"
+            storage_os_disk_create_option = "FromImage"
+            storage_os_disk_managed_disk_type = "Standard_LRS"
+            admin_username = "azureuser"
+            custom_data = "../userdata.sh"
+            os_profile_linux_config_disable_password_authentication = true
+            ip_configuration_name = "testconfiguration1"
+            ip_configuration_subnet = "vnet_acr_subnet_acr"
+            ip_configuration_private_ip_address_allocation = "Dynamic"
+            ip_configuration_public_ip_address = "public_ip_virtual_machine_01"
+            ssh_key_rg = "ssh"
+            ssh_key_name = "azuresshhakan"
+            nsg_association_enabled = true
+            nsg = "nsg_01"
+        }
+    }
 }
 
-variable "admin_username" {
-    default = "acr-vm"
+variable "network_security_groups" {
+  default = {
+    nsg_01 = {
+        name = "nsg-01"
+        security_rules = {
+            allowssh = {
+                name                       = "AllowSSH"
+                priority                   = 100
+                direction                  = "Inbound"
+                access                     = "Allow"
+                protocol                   = "Tcp"
+                source_port_range          = "*"
+                destination_port_range     = "22"
+                source_address_prefix      = "*"
+                destination_address_prefix = "*"
+            }
+        }
+    }
+  }
 }
 
-variable "ssh_key_rg" {
-    default = "ssh"
-}
 
-variable "ssh_key_name" {
-  default = "azuresshhakan"
+variable "mysql_databases" {
+  default = {
+    mysql_database_01 = {
+        server_name = "coy-database-server"
+        db_name = "phonebook"
+        admin_username = "coyadmin"
+        admin_password_secret = "key_vault_secret_mysql_password"
+        delegated_subnet = "vnet_db_subnet_db"
+        private_dns_zone = "private_dns_zone_mysql"
+        zone = "1"
+    }
+  }
 }

@@ -75,3 +75,14 @@ variable "ip_configuration_private_ip_address_allocation" {
 
 variable "ip_configuration_public_ip_address_id" {  
 }
+
+variable "ssh_key_rg" {
+}
+
+variable "ssh_key_name" {
+}
+
+variable "nsg_association_enabled" {
+}
+variable "nsg_id" {
+}

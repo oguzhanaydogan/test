@@ -337,13 +337,32 @@ module "key_vault_access_policies" {
 #   ]
 # }
 
+
 module "role_assignments" {
   source = "./modules/RoleAssignment"
-  for_each = var.role_assignments
-  scope = module.acrs["${each.value.scope}"].id
-  principal_id = module.app_services["${each.value.principal_id}"].principal_id
-  role_definition = each.value.role_definition
+  count = length(local.role_assignments)
+  scope = local.role_assignments[count.index].scope
+  principal_id = local.role_assignments[count.index].principal_id
+  role_definition = local.role_assignments[count.index].role_definition
 }
+
+# resource "azurerm_role_assignment" "example" {
+#   scope                = module.ACR.id
+#   role_definition_name = "AcrPush"
+#   principal_id         = azurerm_virtual_machine.vm1.identity[0].principal_id
+# }
+
+# resource "azurerm_role_assignment" "example2" {
+#   scope                = module.webapp1.id
+#   role_definition_name = "Contributor"
+#   principal_id         = azurerm_virtual_machine.vm1.identity[0].principal_id
+# }
+
+# resource "azurerm_role_assignment" "example3" {
+#   scope                = module.webapp2.id
+#   role_definition_name = "Contributor"
+#   principal_id         = azurerm_virtual_machine.vm1.identity[0].principal_id
+# }
 
 # resource "azurerm_role_assignment" "web1_role_assignment" {
 #   scope              = module.ACR.id
@@ -365,9 +384,9 @@ module "app_services" {
   } : {}
   common_app_settings = {
     "MYSQL_PASSWORD"=module.key_vault_secrets["${each.value.mysql_password_secret}"].id
-    "MYSQL_DATABASE_HOST"=module.mysql.host
-    "MYSQL_DATABASE"=module.mysql.database_name
-    "MYSQL_USER"=module.mysql.database_username
+    "MYSQL_DATABASE_HOST"=module.mysql_databases["${each.value.mysql_database}"].host
+    "MYSQL_DATABASE"=module.mysql_databases["${each.value.mysql_database}"].database_name
+    "MYSQL_USER"=module.mysql_databases["${each.value.mysql_database}"].database_username
     "DOCKER_REGISTRY_SERVER_URL"=module.ACR.fqdn
     "WEBSITE_PULL_IMAGE_OVER_VNET"=true}
 }
@@ -483,13 +502,7 @@ module "private_dns_zone_extra_links" {
 #   private_dns_zone_name = module.private_dns_zone_acr.name
 # }
 
-locals {
-  attached_resource_ids = [
-    module.acrs["acr_01"].id, 
-    module.app_services["app_service_01"].id,
-    module.app_services["app_service_02"].id
-  ]
-}
+
 
 ##########################################
 module "private_endpoints" {
@@ -544,19 +557,34 @@ module "private_endpoints" {
 #     attached_resource_id = module.webapp2.id
 #     subresource_name = "sites"
 # }
-module "mysql" {
+
+module "mysql_databases" {
   source = "./modules/MySql"
-  server_name = "coy-database-server"
+  for_each = var.mysql_databases
   location = module.resourcegroup.location
   resourcegroup = module.resourcegroup.name
-  db_name = "phonebook"
-  admin_username = "coyadmin"
-  admin_password = data.azurerm_key_vault_secret.db_password.value
-  delegated_subnet_id = module.db_subnet.id
-  private_dns_zone_id = module.private_dns_zone_mysql.id
-  zone = "1"
-  depends_on = [ module.private_dns_zone_mysql ]
+  server_name = each.value.server_name
+  db_name = each.value.db_name
+  admin_username = each.value.admin_username
+  admin_password = module.key_vault_secrets["${each.value.admin_password_secret}"].value
+  delegated_subnet_id = module.subnets["${each.value.delegated_subnet}"].id
+  private_dns_zone_id = module.private_dns_zones["${each.value.private_dns_zone}"].id
+  zone = each.value.zone
+  
 }
+# module "mysql" {
+#   source = "./modules/MySql"
+#   server_name = "coy-database-server"
+#   location = module.resourcegroup.location
+#   resourcegroup = module.resourcegroup.name
+#   db_name = "phonebook"
+#   admin_username = "coyadmin"
+#   admin_password = data.azurerm_key_vault_secret.db_password.value
+#   delegated_subnet_id = module.db_subnet.id
+#   private_dns_zone_id = module.private_dns_zone_mysql.id
+#   zone = "1"
+#   depends_on = [ module.private_dns_zone_mysql ]
+# }
 
 # module "private_dns_zone_mysql" {
 #   source = "./modules/privatednszonewithlink"
@@ -606,49 +634,53 @@ module "linux_virtual_machines" {
   os_profile_linux_config_ssh_keys_path = each.value.os_profile_linux_config_ssh_keys_path
   os_profile_linux_config_ssh_keys_key_data = each.value.os_profile_linux_config_ssh_keys_key_data
   ip_configuration_name = each.value.ip_configuration_name
-  ip_configuration_subnet_id = each.value.ip_configuration_subnet_id
+  ip_configuration_subnet_id = module.subnets["${each.value.ip_configuration_subnet}"].id
   ip_configuration_private_ip_address_allocation = each.value.ip_configuration_private_ip_address_allocation
-  ip_configuration_public_ip_address_id = each.value.ip_configuration_public_ip_address_id
+  ip_configuration_public_ip_address_id = module.public_ip_addresses["${each.value.ip_configuration_public_ip_address}"].id
+  ssh_key_rg = each.value.ssh_key_rg
+  ssh_key_name = each.value.ssh_key_name
+  nsg_association_enabled = each.value.nsg_association_enabled
+  nsg_id = module.network_security_groups["${each.value.nsg}"].id
 }
-resource "azurerm_virtual_machine" "vm1" {
-  name                  = var.vm_name
-  location              = module.resourcegroup.location
-  resource_group_name   = module.resourcegroup.name
-  network_interface_ids = [azurerm_network_interface.main.id]
-  vm_size               = "Standard_D2s_v3"
-  delete_os_disk_on_termination = true
-  delete_data_disks_on_termination = true
-  depends_on = [ module.ACR ]
-  identity {
-    type = "SystemAssigned"
-  }
+# resource "azurerm_virtual_machine" "vm1" {
+#   name                  = var.vm_name
+#   location              = module.resourcegroup.location
+#   resource_group_name   = module.resourcegroup.name
+#   network_interface_ids = [azurerm_network_interface.main.id]
+#   vm_size               = "Standard_D2s_v3"
+#   delete_os_disk_on_termination = true
+#   delete_data_disks_on_termination = true
+#   depends_on = [ module.ACR ]
+#   identity {
+#     type = "SystemAssigned"
+#   }
 
-  storage_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
-    version   = "latest"
-  }
-  storage_os_disk {
-    name              = "myosdisk1"
-    caching           = "ReadWrite"
-    create_option     = "FromImage"
-    managed_disk_type = "Standard_LRS"
-  }
-  os_profile {
-    computer_name  = var.vm_name
-    admin_username = var.admin_username
-    custom_data = file("userdata.sh")
+#   storage_image_reference {
+#     publisher = "Canonical"
+#     offer     = "UbuntuServer"
+#     sku       = "18.04-LTS"
+#     version   = "latest"
+#   }
+#   storage_os_disk {
+#     name              = "myosdisk1"
+#     caching           = "ReadWrite"
+#     create_option     = "FromImage"
+#     managed_disk_type = "Standard_LRS"
+#   }
+#   os_profile {
+#     computer_name  = var.vm_name
+#     admin_username = var.admin_username
+#     custom_data = file("userdata.sh")
     
-  }
-  os_profile_linux_config {
-    disable_password_authentication = true
-    ssh_keys {
-      path = "/home/${var.admin_username}/.ssh/authorized_keys"
-      key_data = data.azurerm_ssh_public_key.ssh_public_key.public_key
-    }
-  }
-}
+#   }
+#   os_profile_linux_config {
+#     disable_password_authentication = true
+#     ssh_keys {
+#       path = "/home/${var.admin_username}/.ssh/authorized_keys"
+#       key_data = data.azurerm_ssh_public_key.ssh_public_key.public_key
+#     }
+#   }
+# }
 
 # resource "azurerm_public_ip" "pip1" {
 #   name                = "${var.vm_name}-pip"
@@ -671,52 +703,45 @@ resource "azurerm_virtual_machine" "vm1" {
 # }
 
 
-data "azurerm_ssh_public_key" "ssh_public_key" {
-  resource_group_name = var.ssh_key_rg
-  name                = var.ssh_key_name
+# data "azurerm_ssh_public_key" "ssh_public_key" {
+#   resource_group_name = var.ssh_key_rg
+#   name                = var.ssh_key_name
+# }
+
+
+# resource "azurerm_network_interface_security_group_association" "nic1" {
+#   network_interface_id      = azurerm_network_interface.main.id
+#   network_security_group_id = azurerm_network_security_group.nsg1.id
+# }
+
+# resource "azurerm_network_security_group" "nsg1" {
+#     name                = "nsgwithsshopen"
+#     location            = module.resourcegroup.location
+#     resource_group_name = module.resourcegroup.name
+
+#     security_rule {
+#         name                       = "AllowSSH"
+#         priority                   = 100
+#         direction                  = "Inbound"
+#         access                     = "Allow"
+#         protocol                   = "Tcp"
+#         source_port_range          = "*"
+#         destination_port_range     = "22"
+#         source_address_prefix      = "*"
+#         destination_address_prefix = "*"
+#     }
+# }
+
+module "network_security_groups" {
+  source = "./modules/NetworkSecurityGroup"
+  for_each = var.network_security_groups
+  location            = module.resourcegroup.location
+  resource_group_name = module.resourcegroup.name
+  name = each.value.name
+  security_rules = each.value.security_rules
 }
 
 
-resource "azurerm_network_interface_security_group_association" "nic1" {
-  network_interface_id      = azurerm_network_interface.main.id
-  network_security_group_id = azurerm_network_security_group.nsg1.id
-}
-
-resource "azurerm_network_security_group" "nsg1" {
-    name                = "nsgwithsshopen"
-    location            = module.resourcegroup.location
-    resource_group_name = module.resourcegroup.name
-
-    security_rule {
-        name                       = "AllowSSH"
-        priority                   = 100
-        direction                  = "Inbound"
-        access                     = "Allow"
-        protocol                   = "Tcp"
-        source_port_range          = "*"
-        destination_port_range     = "22"
-        source_address_prefix      = "*"
-        destination_address_prefix = "*"
-    }
-}
-
-resource "azurerm_role_assignment" "example" {
-  scope                = module.ACR.id
-  role_definition_name = "AcrPush"
-  principal_id         = azurerm_virtual_machine.vm1.identity[0].principal_id
-}
-
-resource "azurerm_role_assignment" "example2" {
-  scope                = module.webapp1.id
-  role_definition_name = "Contributor"
-  principal_id         = azurerm_virtual_machine.vm1.identity[0].principal_id
-}
-
-resource "azurerm_role_assignment" "example3" {
-  scope                = module.webapp2.id
-  role_definition_name = "Contributor"
-  principal_id         = azurerm_virtual_machine.vm1.identity[0].principal_id
-}
 
 resource "azurerm_application_insights" "insight" {
   name                = "tf-test-appinsights"
